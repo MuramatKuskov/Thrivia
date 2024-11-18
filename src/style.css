@@ -1,0 +1,168 @@
+/* Reset CSS */
+* {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+*, *:before, *:after {
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	box-sizing: border-box;
+}
+
+:focus, :active {
+	outline: none;
+}
+
+a:focus, a:active {
+	outline: none;
+}
+
+html, body {
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
+	font-size: 100%;
+	line-height: 1;
+	font-size: 14px;
+	-ms-text-size-adjust: 100%;
+	-moz-text-size-adjust: 100%;
+	-webkit-text-size-adjust: 100%;
+}
+
+input, button, textarea {
+	font-family: inherit;
+}
+
+input::-ms-clear- {
+	display: none;
+}
+
+button {
+	cursor: pointer;
+}
+
+button-moz-focus-inner {
+	padding: 0;
+	border: 0;
+}
+
+/* В фаерфоксе убирает лишние отступы в кнопках */
+a, a:visited {
+	text-decoration: none;
+	color: inherit;
+}
+
+a:hover {
+	text-decoration: none;
+}
+
+ul li {
+	list-style: none;
+}
+
+img {
+	vertical-align: top;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	font-size: inherit;
+	font-weight: 400;
+}
+
+/* END RESET */
+
+:root {
+	--ui-background: rgba(29, 29, 29, 0.7);
+}
+
+body.inspecting:hover {
+	cursor: crosshair;
+}
+
+.icon-btn {
+	transition-duration: 100;
+}
+
+.icon-btn:hover {
+	transform: scale(1.25);
+	cursor: pointer;
+}
+
+/* params siddebar */
+.parameters__area {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 15%;
+	height: 100%;
+}
+
+.parameters__container {
+	display: flex;
+	flex-direction: column;
+	gap: 1em;
+	position: absolute;
+	top: 0;
+	left: -100%;
+	height: 100%;
+	width: 100%;
+	padding: 20px 10px;
+	transition-duration: 150ms;
+	background-color: var(--ui-background);
+}
+
+.parameters__container.pinned, .parameters__area:hover > .parameters__container {
+	transform: translateX(100%);
+}
+
+/* inspector elements */
+#inspect-trigger {
+	position: absolute;
+	top: 2em;
+	right: 2em;
+	padding: 2px;
+	background-color: var(--ui-background);
+	border-radius: 25%;
+	transition-duration: 100ms;
+}
+
+#inspect-trigger:hover {
+	cursor: pointer;
+	scale: 1.2;
+}
+
+#inspect-trigger > .icon-btn:hover {
+	transform: unset;
+}
+
+/* stream area */
+.stream__area {
+	position: fixed;
+	bottom: 0;
+	width: 100%;
+	height: 10%;
+}
+
+.stream__container {
+	display: flex;
+	gap: 15px;
+	width: fit-content;
+	margin: 0 auto;
+	padding: 10px 15px;
+	border-radius: 30px;
+	transition-duration: 200ms;
+	background-color: rgba(29, 29, 29, 0.7);
+}
+
+.stream__container.hidden {
+	transform: translateY(300%);
+}
+
+canvas {
+	position: absolute;
+	top: 0;
+	left: 0;
+	background: transparent;
+}

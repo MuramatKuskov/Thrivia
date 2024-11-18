@@ -1,0 +1,24 @@
+{
+  "name": "thrivia",
+  "version": "0.0.1",
+  "description": "Evolution of life in cyber space",
+  "browser": "#src/app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MuramatKuskov/Thrivia.git"
+  },
+  "keywords": [
+    "cyberbiology",
+    "evolution",
+    "life"
+  ],
+  "author": "Kuskov",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MuramatKuskov/Thrivia/issues"
+  },
+  "homepage": "https://github.com/MuramatKuskov/Thrivia#readme"
+}

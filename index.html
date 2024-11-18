@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" type="image/png" href="/public/icons/favicon/favicon-96x96.png" sizes="96x96" />
+	<link rel="icon" type="image/svg+xml" href="/public/icons/favicon/favicon.svg" />
+	<link rel="shortcut icon" href="/public/icons/favicon/favicon.ico" />
+	<link rel="apple-touch-icon" sizes="180x180" href="/public/icons/favicon/apple-touch-icon.png" />
+	<link rel="manifest" href="/public/icons/favicon/site.webmanifest" />
+	<link rel="stylesheet" href="./src/style.css">
+	<script src="./src/app.js" type="module"></script>
+	<title>Thrivia</title>
+</head>
+
+<body>
+	<noscript>You need to enable JavaScript to run this app.</noscript>
+
+	<div class="renderers">
+		<canvas id="world"></canvas>
+		<canvas id="environment"></canvas>
+		<canvas id="beings"></canvas>
+	</div>
+
+	<!-- global overlay -->
+	<div class="UI">
+		<!-- inspector btn -->
+		<div id="inspect-trigger">
+			<img src="./public/icons/Inspect.svg" class="icon-btn" alt="Inspection mode">
+		</div>
+
+		<div class="parameters">
+			<!-- params hover area -->
+			<div class="parameters__area">
+				<!-- dynamic sidebar -->
+				<div class="parameters__container">
+					<h2>Parameters:</h2>
+					<fieldset class="parameters__field">
+						<legend class="parameters__legend">World geometry:</legend>
+						<input id="geo-bordered" class="parameters__input" type="radio" name="geometry" value="bordered"
+							checked>
+						<label for="geo-bordered" class="parameters__label">Bordered</label>
+						<input id="geo-confined" class="parameters__input" type="radio" name="geometry" value="confined">
+						<label for="geo-confined" class="parameters__label">Confined</label>
+					</fieldset>
+					<fieldset class="parameters__field">
+						<legend class="parameters__legend">Population:</legend>
+						<input type="range" min="0" max="500" step="5" class="parameters__input" id="population">
+					</fieldset>
+				</div>
+			</div>
+		</div>
+
+		<div class="stream">
+			<!-- stream hover area -->
+			<div class="stream__area">
+				<!-- stream dynamic bar -->
+				<div class="stream__container">
+					<img src="./public/icons/Play.svg" id="play-btn" alt="Play simulation" class="icon-btn">
+					<img src="./public/icons/Pause.svg" id="pause-btn" alt="Pause simulation" class="icon-btn">
+					<img src="./public/icons/Next.svg" id="next-frame-btn" alt="Simulate next frame" class="icon-btn">
+					<img src="./public/icons/Stop.svg" id="stop-btn" alt="Stop current simulation" class="icon-btn">
+				</div>
+			</div>
+		</div>
+
+		<!-- inspector window -->
+		<div id="inspector">
+
+		</div>
+	</div>
+</body>
+
+</html>
