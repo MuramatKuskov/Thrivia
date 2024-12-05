@@ -77,12 +77,12 @@ h1, h2, h3, h4, h5, h6 {
 	--ui-background: rgba(29, 29, 29, 0.7);
 }
 
-body.inspecting:hover {
-	cursor: crosshair;
-}
-
 .icon-btn {
 	transition-duration: 100;
+}
+
+.icon-btn.hidden {
+	display: none;
 }
 
 .icon-btn:hover {
@@ -105,7 +105,7 @@ body.inspecting:hover {
 	gap: 1em;
 	position: absolute;
 	top: 0;
-	left: -100%;
+	left: 0;
 	height: 100%;
 	width: 100%;
 	padding: 20px 10px;
@@ -113,8 +113,12 @@ body.inspecting:hover {
 	background-color: var(--ui-background);
 }
 
+.parameters__container.hidden {
+	transform: translateX(-100%);
+}
+
 .parameters__container.pinned, .parameters__area:hover > .parameters__container {
-	transform: translateX(100%);
+	transform: unset;
 }
 
 /* inspector elements */
@@ -145,6 +149,15 @@ body.inspecting:hover {
 	height: 10%;
 }
 
+.stream__area.transparent {
+	height: 0;
+	overflow: visible;
+}
+
+.stream__area.transparent .stream__container {
+	transform: translateY(-5em);
+}
+
 .stream__container {
 	display: flex;
 	gap: 15px;
@@ -153,11 +166,41 @@ body.inspecting:hover {
 	padding: 10px 15px;
 	border-radius: 30px;
 	transition-duration: 200ms;
-	background-color: rgba(29, 29, 29, 0.7);
+	background-color: var(--ui-background);
 }
 
 .stream__container.hidden {
 	transform: translateY(300%);
+}
+
+.stream__area:not(.transparent):hover .stream__container {
+	transform: translateY(0);
+}
+
+.inspecting > .renderers:hover {
+	cursor: crosshair;
+}
+
+.inspector {
+	position: absolute;
+	top: 30%;
+	right: 2em;
+	padding: 1em;
+	border-radius: 10px;
+	background-color: var(--ui-background);
+	transition: 150ms ease-out;
+}
+
+.inspector.hidden {
+	transform: translateX(200%);
+}
+
+.inspector.pinned {
+	transform: unset;
+}
+
+.inspector__section.hidden {
+	display: none;
 }
 
 canvas {

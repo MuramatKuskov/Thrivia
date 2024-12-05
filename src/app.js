@@ -1,29 +1,30 @@
+import { initUserInterface, initRenderers } from "./modules/UserInterface.js";
+import { World } from "./modules/Simulation/Core/World.js";
+
 const RENDERERS = {
 	world: window.world,
 	environment: window.environment,
-	beings: window.beings
+	population: window.population,
+	// effects: window.effects,
 }
 
-window.ctx = {};
-
-Object.values(RENDERERS).forEach(renderer => {
-	renderer.width = window.innerWidth;
-	renderer.height = window.innerHeight;
-	window.ctx[`${renderer.id}`] = renderer.getContext("2d");
-});
-
 const PARAMETERS = {
-	// 0 — confined, 1 — closed (torus)
-	geometry: 1,
+	// 0 — closed (torus), 1 — confined
+	geometry: parseInt(document.querySelector('input[name="geometry"]:checked').value),
+	// biom: "aqua",
 	// number
-	population: 50,
+	population: parseInt(window["population-size"].value),
 	//	px
 	botSize: window.innerWidth / 235,
+	initialOrganic: 25,
 	inspectionMode: false,
 }
 
 function main() {
-
+	initRenderers(RENDERERS);
+	window.simulation = new World(PARAMETERS);
+	window.simulation.init();
+	initUserInterface(PARAMETERS);
 }
 
 main();

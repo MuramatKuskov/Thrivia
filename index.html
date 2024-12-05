@@ -19,9 +19,10 @@
 	<noscript>You need to enable JavaScript to run this app.</noscript>
 
 	<div class="renderers">
-		<canvas id="world"></canvas>
-		<canvas id="environment"></canvas>
-		<canvas id="beings"></canvas>
+		<canvas id="world" style="pointer-events: none;"></canvas>
+		<canvas id="environment" style="pointer-events: none;"></canvas>
+		<canvas id="population" style="pointer-events: none;"></canvas>
+		<!-- <canvas id="effects"></canvas> -->
 	</div>
 
 	<!-- global overlay -->
@@ -36,18 +37,18 @@
 			<div class="parameters__area">
 				<!-- dynamic sidebar -->
 				<div class="parameters__container">
-					<h2>Parameters:</h2>
+					<h2 class="title">Parameters:</h2>
 					<fieldset class="parameters__field">
 						<legend class="parameters__legend">World geometry:</legend>
-						<input id="geo-bordered" class="parameters__input" type="radio" name="geometry" value="bordered"
-							checked>
-						<label for="geo-bordered" class="parameters__label">Bordered</label>
-						<input id="geo-confined" class="parameters__input" type="radio" name="geometry" value="confined">
+						<input id="geo-bordered" class="parameters__input" type="radio" name="geometry" value="0" checked>
+						<label for="geo-bordered" class="parameters__label">Closed (torus)</label>
+						<input id="geo-confined" class="parameters__input" type="radio" name="geometry" value="1">
 						<label for="geo-confined" class="parameters__label">Confined</label>
 					</fieldset>
 					<fieldset class="parameters__field">
 						<legend class="parameters__legend">Population:</legend>
-						<input type="range" min="0" max="500" step="5" class="parameters__input" id="population">
+						<input id="population-size" type="range" min="0" max="500" step="5" value="20"
+							class="parameters__input" name="population">
 					</fieldset>
 				</div>
 			</div>
@@ -59,7 +60,7 @@
 				<!-- stream dynamic bar -->
 				<div class="stream__container">
 					<img src="./public/icons/Play.svg" id="play-btn" alt="Play simulation" class="icon-btn">
-					<img src="./public/icons/Pause.svg" id="pause-btn" alt="Pause simulation" class="icon-btn">
+					<img src="./public/icons/Pause.svg" id="pause-btn" alt="Pause simulation" class="icon-btn hidden">
 					<img src="./public/icons/Next.svg" id="next-frame-btn" alt="Simulate next frame" class="icon-btn">
 					<img src="./public/icons/Stop.svg" id="stop-btn" alt="Stop current simulation" class="icon-btn">
 				</div>
@@ -67,8 +68,36 @@
 		</div>
 
 		<!-- inspector window -->
-		<div id="inspector">
+		<div class="inspector" id="inspector">
+			<h2 class="title">Inspector</h2>
+			<fieldset class="inspector__field">
+				<legend>Layer:</legend>
+				<select name="layer" id="layer-selector">
+					<option value="world" selected>World</option>
+					<option value="environment">Environment</option>
+					<option value="population">Population</option>
+				</select>
+			</fieldset>
+			<b style="display: block; max-width: 150px; line-height: 1.2;">Telemetry is currently accessible via DevTools
+				Console</b>
+			<p style="max-width: 150px; line-height: 1.2;"><span style="color: rgba(30, 30, 30, 0.7);">Windows:</span>
+				Control + Shift + J;</p>
+			<p style="max-width: 150px; line-height: 1.2;"><span style="color: rgba(30, 30, 30, 0.7);">Mac:</span>
+				Command
+				+ Option + J</p>
 
+			<!-- telemetry -->
+			<!-- <div class="inspector__panel">
+				<section class="inspector__section" data-layer="world">
+					<h3 class="title">World</h3>
+				</section>
+				<section class="inspector__section hidden" data-layer="environment">
+					<h3 class="title">Environment</h3>
+				</section>
+				<section class="inspector__section hidden" data-layer="population">
+					<h3 class="title">Being</h3>
+				</section>
+			</div> -->
 		</div>
 	</div>
 </body>
