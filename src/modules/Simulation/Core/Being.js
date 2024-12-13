@@ -3,20 +3,25 @@ import { GenePool } from "./GenePool.js";
 const genes = Object.keys(GenePool);
 
 export class Being {
-	constructor(id, x, y, size) {
+	constructor(id, x, y) {
 		this.id = id;
 		this.x = x;
 		this.y = y;
-		this.size = size;
+		this.size = PARAMETERS.beingSizeMin;
+		/* STATS */
 		this.health = 100;
 		this.energy = 100;
 		this.nutritions = 10;
+		this.FOV = 60;				 // degrees
+		this.rangeOfSight = 35; // px
+		this.rangeOfInteract = 10; // px
 		this.speed = 2;
 		this.direction = Math.floor(Math.random() * 360);
 		// size of geno- & phenotype arrays
 		this.memSize = 32;
 		// available (inherited) genes
 		this.genome = [];
+		this.genomeHashed = 0;
 		// expressed genes
 		this.phenotype = [];
 		// current expressed gene
@@ -31,21 +36,32 @@ export class Being {
 		this.c_blue = 0;	//	poison catalysts
 		this.c_family = 0;	// family
 		this.color = `${this.c_red}, ${this.c_green}, ${this.c_blue}`;
+		this.statusColor = "orange";
 	}
 
-	initMemory() {
-		while (this.genome.length < this.memSize) {
-			let index = Math.floor(Math.random() * GenePool.size);
-			this.genome.push({ key: genes[index], index: index });
+	initMemory(genome = false) {
+		if (genome) {
+			while (this.genome.length < this.memSize) {
+				let index = Math.floor(Math.random() * GenePool.size);
+				this.genome.push({ key: genes[index], index: index });
+			}
+			this.hashGenome();
 		}
+
 		while (this.phenotype.length < this.memSize) {
-			this.phenotype.push(Math.floor(Math.random() * this.memSize));
+			let index = Math.floor(Math.random() * this.memSize);
+			this.phenotype.push({ key: genes[this.genome[index].index], index: index });
 		}
+	}
+
+	hashGenome() {
+		this.genomeHashed = 0;
+		this.genome.forEach(x => this.genomeHashed += x.index);
 	}
 
 	// jump to next action depending on result of current
 	conditionalAction(x) {
-		const mod = this.genome[this.phenotype[(this.expressionPointer + x) % this.memSize]].index;
+		const mod = this.genome[this.phenotype[(this.expressionPointer + x) % this.memSize].index].index;
 		this.incrementExpressionPointer(mod);
 	}
 
@@ -59,7 +75,7 @@ export class Being {
 		let command;
 		for (let cyc = 0; cyc < 15; cyc++) {
 			breakFlag = 0;
-			command = this.genome[this.phenotype[this.expressionPointer]].index;
+			command = this.genome[this.phenotype[this.expressionPointer].index].index;
 
 			// trash DNA could lead to pool overflow
 			// if (GenePool[`${genes[command]}`]) {
@@ -171,25 +187,97 @@ export class Being {
 			this.age = this.age + 1;
 			this.timeSinceMutation = this.timeSinceMutation + 1;
 			// если накопилось много энергии - дать потомство
-			// if (this.health > 999) {
-			// 	this.fission();
+			// if (this.energy > 999) {
+			// 	GenePool.fission(this);
 			// }
-			// молодые тратят 1 энергии на ход, пожилые - 3
-			this.energy = this.age < 600 ? this.energy - 1 : this.energy - 3;
-			// если энергии недостаточно для переваривания нутриентов - бот умирает?
-			// а стоит ли хардкодить тут это самое переваривание?
-			// после этого возраста есть рандомный шанс пригрустить
-			if (this.age > 1000) {
-				if (Math.random() < 0.2) {
+
+			this.energy = this.age < 1500 ? this.energy - 2 : this.energy - 5;
+
+			if (PARAMETERS.allowGrowth) this.size = Math.max(PARAMETERS.beingSizeMin, Math.min(PARAMETERS.beingSizeMin * (this.energy / 100), PARAMETERS.beingSizeMax));
+
+			// рандомный шанс пригрустить для пожилых
+			if (this.age > 9000) {
+				if (Math.random() < 0.15) {
 					this.health = this.health - 15;
+					return;
+				}
+			} else if (this.age > 2000) {
+				if (Math.random() < 0.1) {
+					this.health = this.health - 2;
 					return;
 				}
 			}
 			if (this.health <= 0) {
+				// если энергии недостаточно для переваривания нутриентов - бот умирает?
+				// а стоит ли хардкодить тут это самое переваривание?
 				this.isAlive = false;
 				return;
 			}
 		}
+	}
+
+	// written with help of AI
+	// returns coordinates from center of bot to edges of eyesight
+	getAreaOfSight() {
+		const radians = (this.FOV * Math.PI) / 180;
+		const directionRadians = (this.direction * Math.PI) / 180;
+
+		// Calculate the direction vector
+		const directionX = Math.cos(directionRadians);
+		const directionY = Math.sin(directionRadians);
+
+		// Calculate the extents of the visible area
+		const leftX = this.x + directionX * this.rangeOfSight * Math.cos(radians / 2) - directionY * this.rangeOfSight * Math.sin(radians / 2);
+		const leftY = this.y + directionY * this.rangeOfSight * Math.cos(radians / 2) + directionX * this.rangeOfSight * Math.sin(radians / 2);
+		const rightX = this.x + directionX * this.rangeOfSight * Math.cos(radians / 2) + directionY * this.rangeOfSight * Math.sin(radians / 2);
+		const rightY = this.y + directionY * this.rangeOfSight * Math.cos(radians / 2) - directionX * this.rangeOfSight * Math.sin(radians / 2);
+
+		return { leftX, leftY, rightX, rightY };
+	}
+
+	// written with help of AI
+	isPointInSight(x, y) {
+		// Calculate the direction vector of the bot
+		const directionX = Math.cos(this.direction * Math.PI / 180);
+		const directionY = Math.sin(this.direction * Math.PI / 180);
+
+		// Calculate the vector from the bot to the object
+		const objectVectorX = x - this.x;
+		const objectVectorY = y - this.y;
+
+		// Calculate the dot product
+		const dotProduct = directionX * objectVectorX + directionY * objectVectorY;
+
+		// Calculate the magnitude of the object vector
+		const objectDistance = Math.sqrt(objectVectorX * objectVectorX + objectVectorY * objectVectorY);
+
+		// Check if the angle is within the FOV and the distance is within the range of sight
+		if (
+			!(
+				Math.acos(dotProduct / objectDistance) * 180 / Math.PI <= this.FOV / 2 &&
+				objectDistance <= this.rangeOfSight
+			)
+		) return false;
+
+		// Calculate the distance between the midpoint and the object
+		const dx = x - this.x;
+		const dy = y - this.y;
+		const distance = Math.sqrt(dx * dx + dy * dy);
+
+		// Check if the distance is within the maximum range
+		return distance <= this.rangeOfSight;
+	}
+
+	isRelative(being) {
+		if (Math.abs(this.genomeHashed - being.genomeHashed) > GenePool.size) return false;
+
+		let n = 0;
+		for (let i = 0; i < this.genome.length; i++) {
+			if (this.genome[i].index !== being.genome[i].index) n = n + 1;
+			if (n > PARAMETERS.populationRelativityGap) return false;
+		}
+
+		return true;
 	}
 
 	// mutate() {

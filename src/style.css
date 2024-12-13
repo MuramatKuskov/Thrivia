@@ -90,13 +90,22 @@ h1, h2, h3, h4, h5, h6 {
 	cursor: pointer;
 }
 
+.UI {
+	position: fixed;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+}
+
 /* params siddebar */
 .parameters__area {
 	position: fixed;
 	top: 0;
 	left: 0;
+	min-width: 150px;
 	width: 15%;
 	height: 100%;
+	pointer-events: all;
 }
 
 .parameters__container {
@@ -130,6 +139,7 @@ h1, h2, h3, h4, h5, h6 {
 	background-color: var(--ui-background);
 	border-radius: 25%;
 	transition-duration: 100ms;
+	pointer-events: all;
 }
 
 #inspect-trigger:hover {
@@ -147,6 +157,7 @@ h1, h2, h3, h4, h5, h6 {
 	bottom: 0;
 	width: 100%;
 	height: 10%;
+	pointer-events: all;
 }
 
 .stream__area.transparent {
@@ -183,12 +194,13 @@ h1, h2, h3, h4, h5, h6 {
 
 .inspector {
 	position: absolute;
-	top: 30%;
+	top: 20%;
 	right: 2em;
 	padding: 1em;
 	border-radius: 10px;
 	background-color: var(--ui-background);
 	transition: 150ms ease-out;
+	pointer-events: all;
 }
 
 .inspector.hidden {

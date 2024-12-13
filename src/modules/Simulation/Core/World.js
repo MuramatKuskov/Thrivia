@@ -1,15 +1,12 @@
 import { Being } from "./Being.js";
 import { Organic, Remains } from "./EnvironmentObjects.js";
-import { GenePool } from "./GenePool.js";
 
 export class World {
-	constructor(PARAMETERS) {
+	constructor() {
 		this.geometry = PARAMETERS.geometry;
 		// this.forestCover = PARAMETERS.forestCover * 100;
 		// this.newTreeSize = window.innerWidth / 135;
-		this.population = Array(PARAMETERS.population);
-		this.botSize = PARAMETERS.botSize;
-		this.initialOrganic = PARAMETERS.initialOrganic;
+		this.population = [];
 		this.environment = [];
 		// this.river = {
 		// 	x: 0,
@@ -30,19 +27,24 @@ export class World {
 		// }
 
 		// beings
-		for (let i = 0; i < this.population.length; i++) {
-			const [x, y] = this.getPointOutsideArea(this.botSize, this.population);
-			const being = new Being(i, x, y, this.botSize);
-			being.initMemory();
-			this.population[i] = being;
+		for (let i = 0; i < PARAMETERS.population; i++) {
+			const being = new Being(i, 0, 0);
+			[being.x, being.y] = this.getPointOutsideArea(being.size, this.population);
+			being.initMemory(true);
+			// big boy
+			// if (i < 1) {
+			// 	being.size = 25;
+			// 	being.rangeOfSight = 80;
+			// }
+			this.population.push(being);
 		}
 
 		// organic
-		for (let i = 0; i < this.initialOrganic; i++) {
-			const size = window.innerWidth / 250;
-			let x = this.getRandomPoint('x', size);
-			let y = this.getRandomPoint('y', size);
-			this.environment.push(new Organic(i, x, y, size));
+		for (let i = 0; i < PARAMETERS.organic; i++) {
+			const organic = new Organic(i, 0, 0);
+			organic.x = this.getRandomPoint('x', organic.size);
+			organic.y = this.getRandomPoint('y', organic.size);
+			this.environment.push(organic);
 		}
 
 		this.renderCurrentFrame();
@@ -94,7 +96,7 @@ export class World {
 	}
 
 	// example
-	drawRiver() {
+	/* drawRiver() {
 		window.ctx.fillStyle = '#0000FF';
 		window.ctx.fillRect(this.river.x, this.river.y, this.river.width, this.river.height);
 
@@ -127,7 +129,7 @@ export class World {
 			ctx.fillStyle = '#4169E1';
 			ctx.fillRect(waveX, waveY, waveWidth, waveHeight);
 		}
-	}
+	} */
 
 	drawCirlce(layer, x, y, size, color) {
 		window.ctx[`${layer}`].fillStyle = color;
@@ -137,11 +139,39 @@ export class World {
 	}
 
 	drawBeing(being) {
-		const { x, y, size, color, /* statusColor */ } = being;
+		const { x, y, size, color, statusColor } = being;
 		// outer (status) circle
-		this.drawCirlce("population", x, y, size + size / 3, "orange" /* statucSolor */);
+		this.drawCirlce("population", x, y, size + size / 3, statusColor);
 		// inner (body)
 		this.drawCirlce("population", x, y, size, `rgb(${color})`);
+
+		// eyesight
+		if (PARAMETERS.drawFOV) {
+			const area = being.getAreaOfSight();
+			ctx.population.strokeStyle = "red";
+			ctx.population.beginPath();
+			ctx.population.moveTo(being.x, being.y);
+			ctx.population.lineTo(area.leftX, area.leftY);
+			ctx.population.lineTo(area.rightX, area.rightY);
+			ctx.population.closePath();
+			ctx.population.stroke();
+		}
+
+		if (PARAMETERS.drawRangeOfSight) {
+			ctx.population.strokeStyle = "green";
+			ctx.population.moveTo(being.x, being.y);
+			ctx.population.beginPath();
+			ctx.population.arc(being.x, being.y, size + being.rangeOfSight, 0, Math.PI * 2);
+			ctx.population.stroke();
+		}
+
+		if (PARAMETERS.drawRangeOfInteract) {
+			ctx.population.strokeStyle = "green";
+			ctx.population.moveTo(being.x, being.y);
+			ctx.population.beginPath();
+			ctx.population.arc(being.x, being.y, size + being.rangeOfInteract, 0, Math.PI * 2);
+			ctx.population.stroke();
+		}
 	}
 
 	renderCurrentFrame() {
@@ -164,17 +194,6 @@ export class World {
 		// окружение
 		this.environment.forEach(entry => {
 			this.drawCirlce("environment", entry.x, entry.y, entry.size, entry.color);
-			// switch (entry.type) {
-			// 	case "tree":
-			// 		this.drawCirlce("environment", entry.x, entry.y, entry.size, "green");
-			// 		break;
-			// 	case "remains":
-			// 		this.drawCirlce("environment", entry.x, entry.y, entry.size, "orange");
-			// 		break;
-			// 	case "organic":
-			// 		this.drawCirlce("environment", entry.x, entry.y, entry.size, "yellow");
-			// 		break;
-			// }
 		});
 	}
 
@@ -190,18 +209,21 @@ export class World {
 			if (being.isAlive) being.doSmth();
 			if (!being.isAlive) {
 				this.population.splice(index, 1);
-				this.environment.push(new Remains(`${Date.now()}-${Math.random().toString(36).substring(2, 15)}`, this.x, this.y, this.size / 3));
+				this.environment.push(new Remains(`${Date.now()}-${Math.random().toString(36).substring(2, 15)}`, being.x, being.y, being.energy / 3));
 			}
 		});
+
+		// stop simulation if all are dead
+		if (!this.population.length) this.isLive = false;
 
 		for (let i = 0; i < this.environment.length; i++) {
 			const element = this.environment[i];
 			if (element instanceof Remains) {
-				element.age = element.age + 1;
-				if (element.age > 1000) {
+				if (element.age > PARAMETERS.remainsLifespan) {
 					this.environment.splice(i, 1);
 					i = i - 1;
 				}
+				element.age = element.age + 1;
 			}
 		}
 

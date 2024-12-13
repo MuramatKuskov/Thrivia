@@ -1,3 +1,4 @@
+import { Being } from "./Simulation/Core/Being.js";
 import { World } from "./Simulation/Core/World.js";
 
 export function initRenderers(renderers) {
@@ -15,13 +16,13 @@ let inspectorAnimationID = null;
 let inspectorTarget = null;
 let inspectedLayer = window["layer-selector"].value;
 
-export function initUserInterface(parameters) {
-	listenParameters(parameters);
-	listenStreamControls(parameters);
+export function initUserInterface() {
+	listenParameters();
+	listenStreamControls();
 	initInspector();
 }
 
-function listenParameters(parameters) {
+function listenParameters() {
 	const parametersChanged = new CustomEvent('parametersChanged');
 	const geometryOptions = document.querySelectorAll('input[name="geometry"]');
 
@@ -34,26 +35,30 @@ function listenParameters(parameters) {
 	document.addEventListener("parametersChanged", (e) => {
 		const parameterChanged = e.target.activeElement.name;
 		if (parameterChanged === "population") {
-			window.simulation.population.length = parameters.population;
+			window.simulation.population.length = window.PARAMETERS.population;
 		} else {
-			window.simulation[`${parameterChanged}`] = parameters[`${parameterChanged}`];
+			window.simulation[`${parameterChanged}`] = window.PARAMETERS[`${parameterChanged}`];
 		}
 	});
 
 	window["population-size"].addEventListener('change', (event) => {
-		parameters.population = parseInt(event.target.value);
+		window.PARAMETERS.population = parseInt(event.target.value);
+		document.dispatchEvent(parametersChanged);
+	});
+	window["organic-count"].addEventListener('change', (event) => {
+		window.PARAMETERS.organic = parseInt(event.target.value);
 		document.dispatchEvent(parametersChanged);
 	});
 
 	geometryOptions.forEach(option => {
 		option.addEventListener("change", (event) => {
-			parameters.geometry = possibleGeometry[`${event.target.id}`];
+			window.PARAMETERS.geometry = possibleGeometry[`${event.target.id}`];
 			document.dispatchEvent(parametersChanged);
 		});
 	});
 }
 
-function listenStreamControls(parameters) {
+function listenStreamControls() {
 	const parametersContainer = document.querySelector('.parameters__container');
 	const streamArea = document.querySelector(".stream__area");
 	let simulationID;
@@ -110,7 +115,7 @@ function listenStreamControls(parameters) {
 		}
 		window.simulation.isLive = false;
 		window.cancelAnimationFrame(simulationID);
-		window.simulation = new World(parameters);
+		window.simulation = new World();
 		window.simulation.init();
 	});
 }
@@ -143,7 +148,7 @@ function toggleInspector() {
 	window[`${inspectedLayer}`].removeEventListener("click", listenLayerInteract);
 }
 
-// listen interact w env & beings layers
+// handle interactivity of env & population layers
 function changeLayer(event) {
 	// remove previous listener if exists
 	window[`${inspectedLayer}`].removeEventListener("click", listenLayerInteract);
@@ -169,7 +174,9 @@ function listenLayerInteract(event) {
 	for (const object of window.simulation[`${inspectedLayer}`]) {
 		if (mouseX >= object.x - object.size && mouseX <= object.x + object.size &&
 			mouseY >= object.y - object.size && mouseY <= object.y + object.size) {
+			if (inspectorTarget instanceof Being) inspectorTarget.statusColor = "orange";
 			inspectorTarget = object;
+			if (inspectorTarget instanceof Being) inspectorTarget.statusColor = "blue";
 			document.dispatchEvent(targetSelectEvent);
 		}
 	}
@@ -177,7 +184,7 @@ function listenLayerInteract(event) {
 
 // recursive animation call
 function animateInspector() {
-	if (inspectedLayer !== "world" && !inspectorTarget) {
+	if (inspectedLayer !== "world" && !inspectorTarget || !window.simulation.isLive) {
 		cancelAnimationFrame(inspectorAnimationID);
 		document.addEventListener("targetSelect", resumeInspectorAnimation);
 		return;
@@ -201,25 +208,20 @@ function updateInspector() {
 	// section where to insert data
 	// const section = document.querySelector(`.inspector__section[data-layer="${inspectedLayer}"]`);
 
+	if (inspectedLayer !== "world" && !inspectorTarget) {
+		console.error("no tgt at layer: " + inspectedLayer);
+		cancelAnimationFrame(inspectorAnimationID);
+	}
+
 	switch (inspectedLayer) {
 		case "world":
-			return console.log("age: " + window.simulation.age);
+			console.log(window.simulation);
+			break;
 		case "environment":
-			if (!inspectorTarget) {
-				console.error("no tgt at layer: " + inspectedLayer);
-				cancelAnimationFrame(inspectorAnimationID);
-				inspectorTarget = null;
-				break;
-			}
 			console.log(inspectorTarget);
 			break;
 		case "population":
-			if (!inspectorTarget) {
-				console.error("no tgt at layer: " + inspectedLayer);
-				cancelAnimationFrame(inspectorAnimationID);
-				inspectorTarget = null;
-				break;
-			}
+			if (!inspectorTarget.isAlive) inspectorTarget = null;
 			console.log(inspectorTarget);
 			break;
 	}
