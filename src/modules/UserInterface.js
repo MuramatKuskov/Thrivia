@@ -25,10 +25,17 @@ export function initUserInterface() {
 function listenParameters() {
 	const parametersChanged = new CustomEvent('parametersChanged');
 	const geometryOptions = document.querySelectorAll('input[name="geometry"]');
+	const paintOptions = document.querySelectorAll('input[name="paint"]');
 
+	// validation by html rly? is it ok if fires on load?
 	const possibleGeometry = {};
+	const paintSchemes = {};
+
 	geometryOptions.forEach((geometryOption, index) => {
 		possibleGeometry[geometryOption.id] = index;
+	});
+	paintOptions.forEach((option, index) => {
+		paintSchemes[option.id] = index;
 	});
 
 
@@ -42,18 +49,47 @@ function listenParameters() {
 	});
 
 	window["population-size"].addEventListener('change', (event) => {
-		window.PARAMETERS.population = parseInt(event.target.value);
+		PARAMETERS.population = parseInt(event.target.value);
 		document.dispatchEvent(parametersChanged);
 	});
 	window["organic-count"].addEventListener('change', (event) => {
-		window.PARAMETERS.organic = parseInt(event.target.value);
+		PARAMETERS.organic = parseInt(event.target.value);
 		document.dispatchEvent(parametersChanged);
+	});
+
+	window.fov.addEventListener("change", event => {
+		let state = event.target.value === "true" ? false : true;
+		event.target.value = state;
+		PARAMETERS.drawFOV = state;
+		window.simulation.drawBeings();
 	});
 
 	geometryOptions.forEach(option => {
 		option.addEventListener("change", (event) => {
-			window.PARAMETERS.geometry = possibleGeometry[`${event.target.id}`];
+			PARAMETERS.geometry = possibleGeometry[`${event.target.id}`];
 			document.dispatchEvent(parametersChanged);
+		});
+	});
+
+	paintOptions.forEach(scheme => {
+		scheme.addEventListener("change", (event) => {
+			// PARAMETERS.paintScheme = paintSchemes[`${event.target.id}`];
+
+			PARAMETERS.paintScheme = event.target.id;
+
+			switch (PARAMETERS.paintScheme) {
+				case "default":
+					window.simulation.population.forEach(being => being.color = `${being.c_red}, ${being.c_green}, ${being.c_blue}`);
+					break;
+				case "smell":
+					window.simulation.population.forEach(being => being.paintSmell);
+					break;
+				case "energy":
+					window.simulation.population.forEach(being => being.paintEnergy());
+					break;
+			}
+
+			window.simulation.drawBeings();
 		});
 	});
 }
@@ -174,9 +210,17 @@ function listenLayerInteract(event) {
 	for (const object of window.simulation[`${inspectedLayer}`]) {
 		if (mouseX >= object.x - object.size && mouseX <= object.x + object.size &&
 			mouseY >= object.y - object.size && mouseY <= object.y + object.size) {
-			if (inspectorTarget instanceof Being) inspectorTarget.statusColor = "orange";
+			// unselect last
+			if (inspectorTarget instanceof Being) {
+				inspectorTarget.statusColor = "orange";
+				window.simulation.drawBeings();
+			}
+			// select new
 			inspectorTarget = object;
-			if (inspectorTarget instanceof Being) inspectorTarget.statusColor = "blue";
+			if (inspectorTarget instanceof Being) {
+				inspectorTarget.statusColor = "blue";
+				window.simulation.drawBeings();
+			}
 			document.dispatchEvent(targetSelectEvent);
 		}
 	}

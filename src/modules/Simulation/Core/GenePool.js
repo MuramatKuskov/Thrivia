@@ -3,6 +3,7 @@ import { Being } from "./Being.js";
 
 export const GenePool = {
 	mutate(being) {
+		if (Math.random() > 0.33) return;
 		const keys = Object.keys(this);
 		let mutation = Math.floor(Math.random() * this.size);
 		let DNASection = Math.floor(Math.random() * being.memSize);
@@ -34,70 +35,95 @@ export const GenePool = {
 
 	turn(being) {
 		being.direction = Math.floor(Math.random() * 360);
-		being.incrementExpressionPointer(2);
+		being.incrementExpressionPointer(1);
 		return 0;
 	},
 
 	move(being) {
-		// if (being.energy < 5) {
-		// 	being.incrementExpressionPointer(1);
-		// 	return 1;
-		// }
+		if (being.energy < 1) {
+			being.incrementExpressionPointer(4);
+			return 1;
+		}
 
 		const deltaX = Math.cos(being.direction * Math.PI / 180) * being.speed;
 		const deltaY = Math.sin(being.direction * Math.PI / 180) * being.speed;
+		let collision = null;
 
-		// проверка на водоем на пути
-		// if (
-		// 	being.x + deltaX > being.world.river.x - being.size / 3
-		// 	&&
-		// 	being.x + deltaX < being.world.river.width - being.size / 3
-		// 	&&
-		// 	being.y + deltaY > being.world.river.y - being.size / 3
-		// 	&&
-		// 	being.y + deltaY < being.world.river.height - being.size / 3
-		// ) {
-		// 	console.log(3);
-		// }
+		// avoid collisions
+		window.simulation.population.forEach(bot => {
+			if (being.id === bot.id) return;
 
-		being.x += deltaX;
-		being.y += deltaY;
+			// unstuck if collided already
+			while (
+				being.x + being.size >= bot.x - bot.size &&
+				being.x - being.size <= bot.x + bot.size &&
+				being.y + being.size >= bot.y - bot.size &&
+				being.y - being.size <= bot.y + bot.size
+			) {
+				being.x += Math.floor((Math.random() * 23) - 15);
+				being.y += Math.floor((Math.random() * 23) - 15);
+			}
 
-		// world boundaries
-		switch (window.simulation.geometry) {
-			// closed (torus)
-			case 0:
-				if (being.x < 0) {
-					being.x = window.innerWidth - being.size;
-				} else if (being.x > window.innerWidth) {
-					being.x = 0 + being.size / 2;
-				}
+			// calc possible collisions after movement
+			if (
+				deltaX + being.x + being.size >= bot.x - bot.size &&
+				deltaX + being.x - being.size <= bot.x + bot.size &&
+				deltaY + being.y + being.size >= bot.y - bot.size &&
+				deltaY + being.y - being.size <= bot.y + bot.size
+			) {
+				return collision = bot;
+			}
+		});
 
-				if (being.y < 0) {
-					being.y = window.innerHeight - being.size;
-				} else if (being.y > window.innerHeight) {
-					being.y = 0;
-				}
-				break;
+		if (!collision) {
+			being.x += deltaX;
+			being.y += deltaY;
 
-			// confined (bordered)
-			case 1:
-				if (being.x < being.size / 2) {
-					being.x = being.size;
-				} else if (being.x > window.innerWidth) {
-					being.x = window.innerWidth - being.size;
-				}
+			// world boundaries
+			switch (window.simulation.geometry) {
+				// closed (torus)
+				case 0:
+					if (being.x < 0) {
+						being.x = window.innerWidth - being.size;
+					} else if (being.x > window.innerWidth) {
+						being.x = 0 + being.size / 2;
+					}
 
-				if (being.y < being.size) {
-					being.y = being.size;
-				} else if (being.y > window.innerHeight) {
-					being.y = window.innerHeight - being.size;
-				}
-				break;
+					if (being.y < 0) {
+						being.y = window.innerHeight - being.size;
+					} else if (being.y > window.innerHeight) {
+						being.y = 0;
+					}
+					break;
+
+				// confined (bordered)
+				case 1:
+					if (being.x < being.size / 2) {
+						being.x = being.size;
+					} else if (being.x > window.innerWidth) {
+						being.x = window.innerWidth - being.size;
+					}
+
+					if (being.y < being.size) {
+						being.y = being.size;
+					} else if (being.y > window.innerHeight) {
+						being.y = window.innerHeight - being.size;
+					}
+					break;
+			}
+
+			being.energy -= 0.05
+			being.incrementExpressionPointer(1);
+			return 0;
 		}
 
-		being.incrementExpressionPointer(2);
-		return 0;
+		if (being.isRelative(collision)) {
+			being.incrementExpressionPointer(2);
+			return 0;
+		} else {
+			being.incrementExpressionPointer(3);
+			return 1;
+		}
 	},
 
 	// polyfill for testing lifespan
@@ -115,7 +141,7 @@ export const GenePool = {
 		// select meal
 		window.simulation.environment.forEach((item, index) => {
 			if (!(item instanceof Organic) && !(item instanceof Remains)) return;
-			if (!being.isPointInSight(item.x, item.y)) return;
+			if (!being.isPointInSight(item.x, item.y, being.interactRangeMod)) return;
 
 			// remember first seen meal
 			if (!meal) {
@@ -133,10 +159,12 @@ export const GenePool = {
 		});
 
 		if (meal) {
-			being.energy -= 5;
+			being.energy -= 2;
 			window.simulation.environment.splice(meal.index, 1);
 			being.energy += meal.energy;
 			being.health += meal.energy / 3;
+
+			meal instanceof Remains ? being.colorShift("red", 25) : being.colorShift("green", 20);
 
 			// respawn organic on the map
 			if (PARAMETERS.respawnOrganic && meal instanceof Organic) {
@@ -154,79 +182,87 @@ export const GenePool = {
 	},
 
 	hunt(being) {
-		let pray;
+		let target;
 
 		// select pray
-		window.simulation.population.forEach((target, index) => {
-			if (!being.isPointInSight(target.x, target.y)) return;
-			if (being.isRelative(target)) return;
+		window.simulation.population.forEach((neighbour, index) => {
+			if (!being.isPointInSight(neighbour.x, neighbour.y)) return;
+			// if (being.isRelative(neighbour)) return;
 
 			// remember first seen meal
-			if (!pray) {
-				pray = target;
-				pray.index = index;
+			if (!target || being.isRelative(target) && !being.isRelative(neighbour)) {
+				target = neighbour;
+				target.index = index;
 			}
 
 			// if found something better
-			if (target.energy > pray.energy && target.age < pray.age) {
-				pray = target;
-				pray.index = index;
-			} else if ((target.energy - pray.energy) > (target.age - pray.age) /* && calc dmg from rot < this.health */) {
-				pray = target;
-				pray.index = index;
+			if (neighbour.energy > target.energy && neighbour.age < target.age) {
+				target = neighbour;
+				target.index = index;
+			} else if ((neighbour.energy - target.energy) > (neighbour.age - target.age) /* && calc dmg from rot < this.health */) {
+				target = neighbour;
+				target.index = index;
 			}
 		});
 
-		if (!pray) {
-			being.incrementExpressionPointer(1);
+		// exit if no targets or target is relative
+		if (!target) {
+			being.incrementExpressionPointer(2);
+			return 0;
+		} else if (being.isRelative(target)) {
+			being.incrementExpressionPointer(3);
 			return 1;
 		}
 
-		// const requiredEnergy = pray.energy;
-		// being.energy -= requiredEnergy;
-		// pray.energy -= requiredEnergy;
-
-		// if (pray.energy > 0 && pray.energy * 2 > being.health) {
-		// 	being.isAlive = false;
-		// 	return 1;
-		// } else if (pray.energy > 0) {
-		// 	being.energy -= pray.energy * 2;
-		// }
-
-		if (being.energy < pray.energy && being.health < (pray.energy - being.energy) * 2) {
-			pray.energy -= being.energy;
-			// set energy for correct remains value
+		// calculate resources for fight
+		if (being.energy < target.energy && being.health < (target.energy - being.energy) * 2) {
+			target.energy -= being.energy;
 			being.energy = 0;
 			being.isAlive = false;
 			return 1;
-		}
-
-		if (being.energy > pray.energy) {
-			being.energy -= pray.energy;
+		} else if (being.energy > target.energy) {
+			being.energy -= target.energy;
 		} else {
-			being.health -= (pray.energy - being.energy) * 2;
+			being.health -= (target.energy - being.energy) * 2;
 			being.energy = 0;
 		}
 
-		window.simulation.population.splice(pray.index, 1);
-		being.energy += pray.health * 2;
+		// eat pray
+		window.simulation.population.splice(target.index, 1);
+		being.energy += target.health * 2;
 		being.health += 5;
+		being.colorShift("red", 25 + target.health / 4);
 
-		being.incrementExpressionPointer(2);
+		being.incrementExpressionPointer(1);
 		return 1;
 	},
 
 	fission(parent) {
 		if (parent.health < 20 || parent.energy < 200) {
-			parent.incrementExpressionPointer(1);
+			parent.incrementExpressionPointer(2);
 			return 1;
 		}
 
-		const child = new Being(`${Date.now()}-${Math.random().toString(36).substring(2, 15)}`, parent.x + Math.floor((Math.random() - 0.5) * 10), parent.y + Math.floor((Math.random() - 0.5) * 10));
+		let childX;
+		let childY;
+
+		// spawn child near parents and avoid collision
+		do {
+			childX = parent.x + Math.floor((Math.random() * 21) - 10);
+			childY = parent.y + Math.floor((Math.random() * 21) - 10);
+		} while (childX >= -5 && childX <= 5 || childY >= -5 && childY <= 5);
+
+		const child = new Being(`${Date.now()}-${Math.random().toString(36).substring(2, 15)}`, childX, childY);
 		child.genome = parent.genome; // inherit genome
 		this.mutate(child);
 		child.hashGenome();
 		child.initMemory(); // set random phenotype
+
+		if (PARAMETERS.paintScheme === "smell") {
+			child.paintSmell();
+		} else if (PARAMETERS.paintScheme === "energy") {
+			child.paintEnergy();
+		}
 
 		parent.health -= 10;
 		parent.energy -= 150;
@@ -234,8 +270,65 @@ export const GenePool = {
 		const queueOrder = window.simulation.population.findIndex(bot => bot.id === parent.id) + 1;
 		window.simulation.population.splice(queueOrder, 0, child);
 
-		parent.incrementExpressionPointer(2);
+		parent.incrementExpressionPointer(1);
 		return 1;
+	},
+
+	// select next action depending on seen
+	lookup(being) {
+		let focus = null;
+
+		// remember env
+		window.simulation.environment.forEach(object => {
+			if (!being.isPointInSight(object.x, object.y)) return;
+
+			if (!focus) return focus = object;
+
+			if (
+				!(focus instanceof Organic) && !(focus instanceof Remains) &&
+				object instanceof Organic || object instanceof Remains
+			) return focus = object;
+		});
+
+		// remember other bots
+		window.simulation.population.forEach(bot => {
+			if (!being.isPointInSight(bot.x, bot.y)) return;
+
+
+			if (!focus) {
+				focus = bot;
+				focus.isRel = being.isRelative(bot, Math.random() < 0.5 ? true : false);
+			} else if (focus.isRelative && !being.isRelative(bot, Math.random() < 0.5 ? true : false)) {
+				focus = bot;
+				focus.isRel = false;
+			}
+		});
+
+		// seen nothing
+		if (!focus) {
+			being.incrementExpressionPointer(1);
+			return 0;
+		}
+		// seen food 
+		else if (focus instanceof Organic || focus instanceof Remains) {
+			being.incrementExpressionPointer(2);
+			return 0;
+		}
+		// seen other env object
+		else if (!(focus instanceof Being)) {
+			being.incrementExpressionPointer(3);
+			return 0;
+		}
+		// seen relative
+		else if (focus.isRel) {
+			being.incrementExpressionPointer(4);
+			return 0;
+		}
+		// seen foreign
+		else {
+			being.incrementExpressionPointer(5);
+			return 1;
+		}
 	},
 }
 

@@ -25,12 +25,13 @@ window.PARAMETERS = {
 	allowGrowth: false,
 	// number of genome mutations that divides
 	// relatives and non-relatives
-	populationRelativityGap: 3,
+	populationRelativityGap: 5,
 	respawnOrganic: true,
-	drawFOV: false,
+	drawFOV: window.fov.value === "true" ? true : false,
 	drawRangeOfSight: false,
 	drawRangeOfInteract: false,
 	inspectionMode: false,
+	paintScheme: document.querySelector('input[name="paint"]:checked').value,
 }
 
 function main() {

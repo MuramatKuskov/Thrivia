@@ -28,15 +28,23 @@ export class World {
 
 		// beings
 		for (let i = 0; i < PARAMETERS.population; i++) {
-			const being = new Being(i, 0, 0);
-			[being.x, being.y] = this.getPointOutsideArea(being.size, this.population);
+			let [x, y] = this.getPointOutsideArea(PARAMETERS.beingSizeMin, this.population);
+
+			const being = new Being(i, x, y);
 			being.initMemory(true);
+
+			if (PARAMETERS.paintScheme === "smell") {
+				being.paintSmell();
+			} else if (PARAMETERS.paintScheme === "energy") {
+				being.paintEnergy();
+			}
+
 			// big boy
 			// if (i < 1) {
 			// 	being.size = 25;
 			// 	being.rangeOfSight = 80;
 			// }
-			this.population.push(being);
+			this.population[i] = being;
 		}
 
 		// organic
@@ -55,44 +63,82 @@ export class World {
 			throw new Error("Valid axis required ('x' or 'y')");
 		}
 
-		let c;
+		let p;
 		if (axis === "x") {
-			c = Math.random() * (window.innerWidth - subjectSize);
+			p = Math.random() * (window.innerWidth - subjectSize);
 		} else {
-			c = Math.random() * (window.innerHeight - subjectSize);
+			p = Math.random() * (window.innerHeight - subjectSize);
 		}
-		return c;
+		return p;
 	}
 
-	getPointOutsideArea(subjectSize, area) {
-		let x = this.getRandomPoint('x', subjectSize);
-		let y = this.getRandomPoint('y', subjectSize);
+	getPointOutsideArea(subjectSize, avoid) {
+		while (true) {
+			const x = this.getRandomPoint('x', subjectSize);
+			const y = this.getRandomPoint('y', subjectSize);
 
-		// detect collisions with multiple objects
-		if (Array.isArray(area)) {
-			area.forEach(entry => handleCollision(x, y, entry))
-		} else {
-			handleCollision(x, y, area)
+			if (!this.isOverlapping(x, y, subjectSize, avoid)) return [x, y];
+		}
+	}
+
+	isOverlapping(x, y, size, objects) {
+		// const leftEdge = x - size;
+		// const upperEdge = y - size;
+
+		for (const o of objects) {
+			// let objEdges = {
+			// 	left: o.x - o.size,
+			// 	upper: o.y - o.size,
+			// 	right: o.x + o.size,
+			// 	bottom: o.y + o.size
+			// }
+
+			// if (
+			// 	leftEdge + size * 2 >= objEdges.left &&
+			// 	leftEdge <= objEdges.right &&
+			// 	upperEdge + size * 2 >= objEdges.upper &&
+			// 	upperEdge <= objEdges.bottom
+			// ) {
+			// 	console.log("over");
+			// 	return true;
+			// }
+
+			if (x + size >= o.x - o.size &&
+				x - size <= o.x + o.size &&
+				y + size >= o.y - o.size &&
+				y - size <= o.y + o.size) return true;
 		}
 
-		function handleCollision(x, y, avoid) {
-			while (
-				x > avoid.x - subjectSize / 3
-				&&
-				x < avoid.width - subjectSize / 3
-			) {
-				x = this.getRandomPoint('x', subjectSize);
-			}
-			while (
-				y > avoid.y - subjectSize / 3
-				&&
-				y < avoid.y + avoid.height - subjectSize / 3
-			) {
-				y = this.getRandomPoint('y', subjectSize);
-			}
+		return false;
+	}
+
+	handleCollision(x, y, subjectSize, avoid) {
+		while (
+			x - subjectSize / 2 >= avoid.x - avoid.size
+			&&
+			x + subjectSize / 2 <= avoid.x + avoid.size
+		) {
+			x = this.getRandomPoint('x', subjectSize);
+		}
+		while (
+			y - subjectSize / 2 >= avoid.y - avoid.size
+			&&
+			y + subjectSize / 2 <= avoid.y + avoid.size
+		) {
+			y = this.getRandomPoint('y', subjectSize);
 		}
 
-		return [x, y]
+		// while (
+		// 	x - subjectSize / 2 >= avoid.x - avoid.size &&
+		// 	x + subjectSize / 2 <= avoid.x + avoid.size &&
+		// 	y - subjectSize / 2 >= avoid.y - avoid.size &&
+		// 	y + subjectSize / 2 <= avoid.y + avoid.size
+		// ) {
+		// 	x = this.getRandomPoint('x', subjectSize);
+		// 	y = this.getRandomPoint('y', subjectSize);
+		// }
+
+		return [x, y];
 	}
 
 	// example
@@ -139,6 +185,12 @@ export class World {
 	}
 
 	drawBeing(being) {
+		if (PARAMETERS.paintScheme === "smell") {
+			being.paintSmell();
+		} else if (PARAMETERS.paintScheme === "energy") {
+			being.paintEnergy();
+		}
+
 		const { x, y, size, color, statusColor } = being;
 		// outer (status) circle
 		this.drawCirlce("population", x, y, size + size / 3, statusColor);
@@ -209,7 +261,7 @@ export class World {
 			if (being.isAlive) being.doSmth();
 			if (!being.isAlive) {
 				this.population.splice(index, 1);
-				this.environment.push(new Remains(`${Date.now()}-${Math.random().toString(36).substring(2, 15)}`, being.x, being.y, being.energy / 3));
+				this.environment.push(new Remains(`${Date.now()}-${Math.random().toString(36).substring(2, 15)}`, being.x, being.y, Math.min(being.energy / 3, 80)));
 			}
 		});
 

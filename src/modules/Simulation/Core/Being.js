@@ -14,14 +14,15 @@ export class Being {
 		this.nutritions = 10;
 		this.FOV = 60;				 // degrees
 		this.rangeOfSight = 35; // px
-		this.rangeOfInteract = 10; // px
+		this.interactRangeMod = 0.3; // * rangeOfSight = px
 		this.speed = 2;
 		this.direction = Math.floor(Math.random() * 360);
 		// size of geno- & phenotype arrays
 		this.memSize = 32;
 		// available (inherited) genes
 		this.genome = [];
-		this.genomeHashed = 0;
+		// genome hash
+		this.smell = 0;
 		// expressed genes
 		this.phenotype = [];
 		// current expressed gene
@@ -55,8 +56,9 @@ export class Being {
 	}
 
 	hashGenome() {
-		this.genomeHashed = 0;
-		this.genome.forEach(x => this.genomeHashed += x.index);
+		this.smell = 0;
+		// what if key length here??
+		this.genome.forEach(x => this.smell += x.index);
 	}
 
 	// jump to next action depending on result of current
@@ -191,7 +193,7 @@ export class Being {
 			// 	GenePool.fission(this);
 			// }
 
-			this.energy = this.age < 1500 ? this.energy - 2 : this.energy - 5;
+			this.energy = this.age < 1500 ? this.energy - 0.1 : this.energy - 0.5;
 
 			if (PARAMETERS.allowGrowth) this.size = Math.max(PARAMETERS.beingSizeMin, Math.min(PARAMETERS.beingSizeMin * (this.energy / 100), PARAMETERS.beingSizeMax));
 
@@ -236,7 +238,7 @@ export class Being {
 	}
 
 	// written with help of AI
-	isPointInSight(x, y) {
+	isPointInSight(x, y, mod = 1) {
 		// Calculate the direction vector of the bot
 		const directionX = Math.cos(this.direction * Math.PI / 180);
 		const directionY = Math.sin(this.direction * Math.PI / 180);
@@ -255,29 +257,80 @@ export class Being {
 		if (
 			!(
 				Math.acos(dotProduct / objectDistance) * 180 / Math.PI <= this.FOV / 2 &&
-				objectDistance <= this.rangeOfSight
+				objectDistance <= this.rangeOfSight * mod
 			)
 		) return false;
 
-		// Calculate the distance between the midpoint and the object
-		const dx = x - this.x;
-		const dy = y - this.y;
-		const distance = Math.sqrt(dx * dx + dy * dy);
-
-		// Check if the distance is within the maximum range
-		return distance <= this.rangeOfSight;
+		return true;
 	}
 
-	isRelative(being) {
-		if (Math.abs(this.genomeHashed - being.genomeHashed) > GenePool.size) return false;
+	isRelative(being, strongMatch = false) {
+		if (Math.abs(this.smell - being.smell) > GenePool.size) return false;
 
-		let n = 0;
-		for (let i = 0; i < this.genome.length; i++) {
-			if (this.genome[i].index !== being.genome[i].index) n = n + 1;
-			if (n > PARAMETERS.populationRelativityGap) return false;
+		// check before mating?
+		if (strongMatch) {
+			let n = 0;
+			for (let i = 0; i < this.genome.length; i++) {
+				if (this.genome[i].index !== being.genome[i].index) n = n + 1;
+				if (n > PARAMETERS.populationRelativityGap) return false;
+			}
 		}
 
 		return true;
+	}
+
+	colorShift(incrementColor, value) {
+		switch (incrementColor) {
+			case "green":
+				this.c_green += value;
+				if (this.c_green > 255) this.c_green = 255;
+				this.c_red -= value;
+				if (this.c_red < 0) this.c_red = 0;
+				this.c_blue -= value;
+				if (this.c_blue < 0) this.c_blue = 0;
+				break;
+			case "red":
+				this.c_red += value;
+				if (this.c_red > 255) this.c_gred = 255;
+				this.c_green -= value;
+				if (this.c_green < 0) this.c_green = 0;
+				this.c_blue -= value;
+				if (this.c_blue < 0) this.c_blue = 0;
+				break;
+			case "blue":
+				this.c_blue += value;
+				if (this.c_blue > 255) this.c_blue = 255;
+				this.c_red -= value;
+				if (this.c_red < 0) this.c_red = 0;
+				this.c_green -= value;
+				if (this.c_green < 0) this.c_green = 0;
+				break;
+		}
+
+		if (PARAMETERS.paintScheme === "default") this.color = `${this.c_red}, ${this.c_green}, ${this.c_blue}`;
+	}
+
+	// written with help of AI
+	paintSmell() {
+		// 50 and 165 magic numbers
+		// when size = 8 smells are lying in that range
+		const mod = GenePool.size * GenePool.size - GenePool.size;
+
+		// const normalized = (value - 50) / (165 - 50);
+		const normalized = (this.smell - mod) / (GenePool.size * (GenePool.size * 2.5) - mod);
+
+		this.color = `${255 - 255 * normalized}, ${255 - 255 * normalized}, 255`;
+	}
+
+	// written with help of AI
+	paintEnergy() {
+		if (this.energy < 0) return this.color = `95, 35, 55`;
+
+		// Normalize energy to a value between 0 and 1
+		const normalized = this.energy / 300;
+
+		// Return the RGB color as a string
+		this.color = `255, ${255 - 255 * normalized}, ${255 - 255 * normalized}`;
 	}
 
 	// mutate() {
