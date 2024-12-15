@@ -3,17 +3,8 @@ import { Organic, Remains } from "./EnvironmentObjects.js";
 
 export class World {
 	constructor() {
-		this.geometry = PARAMETERS.geometry;
-		// this.forestCover = PARAMETERS.forestCover * 100;
-		// this.newTreeSize = window.innerWidth / 135;
 		this.population = [];
 		this.environment = [];
-		// this.river = {
-		// 	x: 0,
-		// 	y: window.innerHeight / 4,
-		// 	width: window.innerWidth,
-		// 	height: window.innerHeight / 4
-		// };
 		this.age = 0;
 		this.isLive = false;
 		this.fillStyle = "aqua";
@@ -55,6 +46,7 @@ export class World {
 			this.environment.push(organic);
 		}
 
+		this.drawWorld();
 		this.renderCurrentFrame();
 	}
 
@@ -227,7 +219,6 @@ export class World {
 	}
 
 	renderCurrentFrame() {
-		this.drawWorld();
 		this.drawEnvironment();
 		this.drawBeings();
 	}

@@ -1,5 +1,5 @@
 import { Being } from "./Simulation/Core/Being.js";
-import { World } from "./Simulation/Core/World.js";
+import { Organic, Remains } from "./Simulation/Core/EnvironmentObjects.js";
 
 export function initRenderers(renderers) {
 	window.ctx = {};
@@ -16,45 +16,45 @@ let inspectorAnimationID = null;
 let inspectorTarget = null;
 let inspectedLayer = window["layer-selector"].value;
 
-export function initUserInterface() {
-	listenParameters();
-	listenStreamControls();
+export function initUserInterface(BIOM_CONSTRUCTORS) {
+	listenParameters(BIOM_CONSTRUCTORS);
+	listenStreamControls(BIOM_CONSTRUCTORS);
 	initInspector();
 }
 
-function listenParameters() {
-	const parametersChanged = new CustomEvent('parametersChanged');
+function listenParameters(BIOM_CONSTRUCTORS) {
 	const geometryOptions = document.querySelectorAll('input[name="geometry"]');
 	const paintOptions = document.querySelectorAll('input[name="paint"]');
 
-	// validation by html rly? is it ok if fires on load?
-	const possibleGeometry = {};
-	const paintSchemes = {};
-
-	geometryOptions.forEach((geometryOption, index) => {
-		possibleGeometry[geometryOption.id] = index;
-	});
-	paintOptions.forEach((option, index) => {
-		paintSchemes[option.id] = index;
-	});
-
-
-	document.addEventListener("parametersChanged", (e) => {
-		const parameterChanged = e.target.activeElement.name;
-		if (parameterChanged === "population") {
-			window.simulation.population.length = window.PARAMETERS.population;
-		} else {
-			window.simulation[`${parameterChanged}`] = window.PARAMETERS[`${parameterChanged}`];
-		}
-	});
-
 	window["population-size"].addEventListener('change', (event) => {
 		PARAMETERS.population = parseInt(event.target.value);
-		document.dispatchEvent(parametersChanged);
 	});
 	window["organic-count"].addEventListener('change', (event) => {
-		PARAMETERS.organic = parseInt(event.target.value);
-		document.dispatchEvent(parametersChanged);
+		const newValue = parseInt(event.target.value);
+
+		if (newValue > PARAMETERS.organic) {
+			let diff = newValue - PARAMETERS.organic;
+			for (let i = 0; i < diff; i++) {
+				let [x, y] = window.simulation.getPointOutsideArea(4, window.simulation.environment);
+				window.simulation.environment.push(new Organic(`${Date.now()}-${Math.random().toString(36).substring(2, 15)}`, x, y));
+			}
+		} else {
+			let count = 0;
+			window.simulation.environment.forEach(entry => {
+				if (entry instanceof Organic || entry instanceof Remains) count = count + 1;
+			});
+
+			for (let i = window.simulation.environment.length - 1; i >= 0; i--) {
+				const entry = window.simulation.environment[i];
+				if (entry instanceof Organic || entry instanceof Remains) {
+					window.simulation.environment.splice(i, 1);
+					count = count - 1;
+				}
+				if (count <= newValue) break;
+			}
+		}
+
+		PARAMETERS.organic = newValue;
 	});
 
 	window.fov.addEventListener("change", event => {
@@ -64,19 +64,20 @@ function listenParameters() {
 		window.simulation.drawBeings();
 	});
 
+	window["geo-confirm"].addEventListener("click", () => {
+		if (window.simulation instanceof BIOM_CONSTRUCTORS[window.biom.value]) return;
+		stopSimulation(BIOM_CONSTRUCTORS);
+	});
+
 	geometryOptions.forEach(option => {
 		option.addEventListener("change", (event) => {
-			PARAMETERS.geometry = possibleGeometry[`${event.target.id}`];
-			document.dispatchEvent(parametersChanged);
+			PARAMETERS.geometry = event.target.value;
 		});
 	});
 
 	paintOptions.forEach(scheme => {
 		scheme.addEventListener("change", (event) => {
-			// PARAMETERS.paintScheme = paintSchemes[`${event.target.id}`];
-
 			PARAMETERS.paintScheme = event.target.id;
-
 			switch (PARAMETERS.paintScheme) {
 				case "default":
 					window.simulation.population.forEach(being => being.color = `${being.c_red}, ${being.c_green}, ${being.c_blue}`);
@@ -88,21 +89,19 @@ function listenParameters() {
 					window.simulation.population.forEach(being => being.paintEnergy());
 					break;
 			}
-
 			window.simulation.drawBeings();
 		});
 	});
 }
 
-function listenStreamControls() {
+function listenStreamControls(BIOM_CONSTRUCTORS) {
 	const parametersContainer = document.querySelector('.parameters__container');
 	const streamArea = document.querySelector(".stream__area");
-	let simulationID;
 
 	const playSimulation = () => {
 		if (window.simulation.isLive) return;
 		window.simulation.isLive = true;
-		simulationID = window.simulation.animate();
+		window.simulation.animate();
 		if (document.body.classList.contains("inspecting")) {
 			inspectorAnimationID = animateInspector(window.simulation);
 		}
@@ -120,7 +119,6 @@ function listenStreamControls() {
 			window.cancelAnimationFrame(inspectorAnimationID);
 			inspectorAnimationID = null;
 		}
-		window.cancelAnimationFrame(simulationID);
 		window.simulation.isLive = false;
 		streamArea.classList.add("transparent");
 		window["play-btn"].parentElement.classList.remove('hidden');
@@ -138,22 +136,24 @@ function listenStreamControls() {
 			updateInspector();
 		}
 	});
-	window["stop-btn"].addEventListener('click', () => {
-		parametersContainer.classList.remove('hidden');
-		window.inspector.classList.remove("hidden");
-		window["play-btn"].classList.remove('hidden');
-		window["pause-btn"].classList.add('hidden');
-		window["play-btn"].parentElement.classList.remove('hidden');
+	window["stop-btn"].addEventListener('click', () => stopSimulation(BIOM_CONSTRUCTORS));
+}
 
-		if (inspectorAnimationID) {
-			window.cancelAnimationFrame(inspectorAnimationID);
-			inspectorAnimationID = null;
-		}
-		window.simulation.isLive = false;
-		window.cancelAnimationFrame(simulationID);
-		window.simulation = new World();
-		window.simulation.init();
-	});
+function stopSimulation(BIOM_CONSTRUCTORS) {
+	const parametersContainer = document.querySelector('.parameters__container');
+	parametersContainer.classList.remove('hidden');
+	window.inspector.classList.remove("hidden");
+	window["play-btn"].classList.remove('hidden');
+	window["pause-btn"].classList.add('hidden');
+	window["play-btn"].parentElement.classList.remove('hidden');
+
+	if (inspectorAnimationID) {
+		window.cancelAnimationFrame(inspectorAnimationID);
+		inspectorAnimationID = null;
+	}
+	window.simulation.isLive = false;
+	window.simulation = new BIOM_CONSTRUCTORS[window.biom.value]();
+	window.simulation.init();
 }
 
 function initInspector() {

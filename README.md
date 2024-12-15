@@ -34,8 +34,6 @@ Work in progress...
 - UI options: **biom selector**, **bot memory variants**
 - handle window resize/device orientation
 - continuously stream state into observer window
-<!-- interface events refactor accordingly -->
-- apply parameters not on change but on confirmation
 
 - save last parameters config into local store
 

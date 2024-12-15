@@ -1,4 +1,4 @@
-import { World } from "../Core/World";
+import { World } from "../Core/World.js";
 
 
 export class Sands extends World {

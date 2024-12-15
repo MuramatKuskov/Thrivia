@@ -40,10 +40,11 @@ export const GenePool = {
 	},
 
 	move(being) {
-		if (being.energy < 1) {
-			being.incrementExpressionPointer(4);
-			return 1;
-		}
+		// enable after negative energy fix
+		// if (being.energy < 1) {
+		// 	being.incrementExpressionPointer(4);
+		// 	return 1;
+		// }
 
 		const deltaX = Math.cos(being.direction * Math.PI / 180) * being.speed;
 		const deltaY = Math.sin(being.direction * Math.PI / 180) * being.speed;
@@ -80,9 +81,8 @@ export const GenePool = {
 			being.y += deltaY;
 
 			// world boundaries
-			switch (window.simulation.geometry) {
-				// closed (torus)
-				case 0:
+			switch (PARAMETERS.geometry) {
+				case "closed":
 					if (being.x < 0) {
 						being.x = window.innerWidth - being.size;
 					} else if (being.x > window.innerWidth) {
@@ -95,9 +95,7 @@ export const GenePool = {
 						being.y = 0;
 					}
 					break;
-
-				// confined (bordered)
-				case 1:
+				case "confined":
 					if (being.x < being.size / 2) {
 						being.x = being.size;
 					} else if (being.x > window.innerWidth) {

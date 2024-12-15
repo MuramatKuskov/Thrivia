@@ -1,7 +1,7 @@
-import { World } from "../Core/World";
+import { World } from "../Core/World.js";
 
 
-export class Field extends World {
+export class Fields extends World {
 	constructor(PARAMETERS) {
 		super(PARAMETERS);
 		this.fillStyle = "#1eb025";

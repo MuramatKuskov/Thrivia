@@ -1,5 +1,8 @@
 import { initUserInterface, initRenderers } from "./modules/UserInterface.js";
-import { World } from "./modules/Simulation/Core/World.js";
+import { Aqua } from "./modules/Simulation/Bioms/Aqua.js";
+import { Fields } from "./modules/Simulation/Bioms/Fields.js";
+import { Forest } from "./modules/Simulation/Bioms/Forest.js";
+import { Sands } from "./modules/Simulation/Bioms/Sands.js";
 
 const RENDERERS = {
 	world: window.world,
@@ -8,11 +11,15 @@ const RENDERERS = {
 	// effects: window.effects,
 }
 
+const BIOM_CONSTRUCTORS = {
+	aqua: Aqua,
+	fields: Fields,
+	forest: Forest,
+	sands: Sands
+}
+
 window.PARAMETERS = {
-	// 0 — closed (torus), 1 — confined
-	geometry: parseInt(document.querySelector('input[name="geometry"]:checked').value),
-	// biom: "aqua",
-	// number
+	geometry: document.querySelector('input[name="geometry"]:checked').value,
 	population: parseInt(window["population-size"].value),
 	organic: parseInt(window["organic-count"].value),
 	organicEnergyValue: 50,
@@ -36,9 +43,9 @@ window.PARAMETERS = {
 
 function main() {
 	initRenderers(RENDERERS);
-	window.simulation = new World();
+	window.simulation = /* BIOM_CONSTRUCTORS[`${localStorage.biom}`] || */ new BIOM_CONSTRUCTORS.aqua();
 	window.simulation.init();
-	initUserInterface();
+	initUserInterface(BIOM_CONSTRUCTORS);
 }
 
 main();
