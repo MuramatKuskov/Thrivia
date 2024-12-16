@@ -74,7 +74,64 @@ h1, h2, h3, h4, h5, h6 {
 /* END RESET */
 
 :root {
-	--ui-background: rgba(29, 29, 29, 0.7);
+	--ui-background: rgba(29, 29, 29, 0.8);
+	--main-text-color: rgb(200, 200, 200);
+}
+
+body {
+	color: var(--main-text-color);
+}
+
+select {
+	border: 1px solid gray;
+	color: var(--main-text-color);
+	background-color: transparent;
+}
+
+option {
+	background-color: rgb(30, 30, 30);
+}
+
+input[type=radio] {
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+
+	width: 1rem;
+	height: 1rem;
+
+	border: 1px solid gray;
+	border-radius: 50%;
+
+	transition: 500ms;
+}
+
+input[type=radio]:checked {
+	transform: scale(0.7);
+	background-color: mediumturquoise;
+}
+
+input[type=checkbox] {
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+
+	width: 1rem;
+	height: 1rem;
+
+	border: 1px solid gray;
+	border-radius: 3px;
+
+	transition: 200ms;
+}
+
+input[type=checkbox]:checked {
+	background: center url(../public/icons/Check.svg);
+}
+
+button {
+	background-color: transparent;
+	border: 1px solid gray;
 }
 
 .icon-btn {
@@ -118,8 +175,17 @@ h1, h2, h3, h4, h5, h6 {
 	height: 100%;
 	width: 100%;
 	padding: 20px 10px;
+	overflow-y: auto;
+	overflow-x: hidden;
+	scrollbar-width: thin;
+	scrollbar-color: #757575 #353535;
 	transition-duration: 150ms;
 	background-color: var(--ui-background);
+}
+
+.parameters__container::-webkit-scrollbar {
+	width: 8px;
+	background: #757575;
 }
 
 .parameters__container.hidden {
@@ -128,6 +194,13 @@ h1, h2, h3, h4, h5, h6 {
 
 .parameters__container.pinned, .parameters__area:hover > .parameters__container {
 	transform: unset;
+}
+
+.parameters__field {
+	min-width: 100%;
+	display: flex;
+	gap: 3px;
+	flex-wrap: wrap;
 }
 
 /* inspector elements */
