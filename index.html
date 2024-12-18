@@ -39,46 +39,66 @@
 				<div class="parameters__container">
 					<h2 class="title">Parameters:</h2>
 					<fieldset class="parameters__field">
-						<legend class="parameters__legend">World geometry:</legend>
-						<input id="geo-closed" class="parameters__input" type="radio" name="geometry" value="closed" checked>
-						<label for="geo-closed" class="parameters__label">Closed (torus)</label>
-						<input id="geo-confined" class="parameters__input" type="radio" name="geometry" value="confined">
-						<label for="geo-confined" class="parameters__label">Confined</label>
+						<div class="input__element">
+							<input type="checkbox" name="save-last-config" id="save-last-config">
+							<label for="save-last-config">Save last config</label>
+						</div>
+						<div class="input__element">
+							<input type="checkbox" name="use-last-config" id="use-last-config">
+							<label for="use-last-config">Use last config</label>
+						</div>
 					</fieldset>
 					<fieldset class="parameters__field">
-						<legend class="parameters__legend">Population:</legend>
-						<input id="population-size" type="range" min="1" max="500" step="5" value="70"
-							class="parameters__input" name="population">
-					</fieldset>
-					<fieldset class="parameters__field">
-						<legend class="parameters__legend">Organic:</legend>
-						<input id="organic-count" type="range" min="0" max="800" step="5" value="150"
-							class="parameters__input" name="organic">
-					</fieldset>
-					<fieldset class="parameters__field">
-						<legend class="parameters__legend">Paint scheme:</legend>
-						<input type="radio" value="default" class="parameters__input" name="paint" id="default">
-						<label for="default">Default</label>
-						<input type="radio" value="smell" class="parameters__input" name="paint" id="smell" checked>
-						<label for="smell">Smell</label>
-						<input type="radio" value="energy" class="parameters__input" name="paint" id="energy">
-						<label for="energy">Energy</label>
-					</fieldset>
-					<fieldset class="parameters__field">
-						<legend class="parameters__legend">Draw FOV</legend>
-						<input type="checkbox" value="false" name="fov" id="fov">
+						<legend class="parameters__legend">Geometry:</legend>
+						<div class="input__element">
+							<input id="geo-closed" class="parameters__input" type="radio" name="geometry" value="closed">
+							<label for="geo-closed" class="parameters__label">Closed (torus)</label>
+						</div>
+						<div class="input__element">
+							<input id="geo-confined" class="parameters__input" type="radio" name="geometry" value="confined">
+							<label for="geo-confined" class="parameters__label">Confined</label>
+						</div>
 					</fieldset>
 					<fieldset class="parameters__field">
 						<legend class="parameters__legend">Biom:</legend>
 						<select name="biom" id="biom" class="parameters__select">
-							<option value="aqua" class="parameters__option" selected>Aqua</option>
+							<option value="aqua" class="parameters__option">Aqua</option>
 							<option value="fields" class="parameters__option">Fields</option>
 							<option value="forest" class="parameters__option">Forest</option>
 							<option value="sands" class="parameters__option">Sands</option>
 						</select>
-						<button id="geo-confirm" type="button">
+						<button id="biom-confirm" type="button">
 							<img src="./public/icons/Check.svg" alt="apply">
 						</button>
+					</fieldset>
+					<fieldset class="parameters__field">
+						<legend class="parameters__legend">Population:</legend>
+						<input id="population-size" type="range" min="1" max="500" step="5" class="parameters__input"
+							name="population">
+					</fieldset>
+					<fieldset class="parameters__field">
+						<legend class="parameters__legend">Organic:</legend>
+						<input id="organic-count" type="range" min="0" max="800" step="5" class="parameters__input"
+							name="organic">
+					</fieldset>
+					<fieldset class="parameters__field">
+						<legend class="parameters__legend">Paint scheme:</legend>
+						<div class="input__element">
+							<input type="radio" value="default" class="parameters__input" name="paint" id="default">
+							<label for="default">Default</label>
+						</div>
+						<div class="input__element">
+							<input type="radio" value="smell" class="parameters__input" name="paint" id="smell">
+							<label for="smell">Smell</label>
+						</div>
+						<div class="input__element">
+							<input type="radio" value="energy" class="parameters__input" name="paint" id="energy">
+							<label for="energy">Energy</label>
+						</div>
+					</fieldset>
+					<fieldset class="parameters__field">
+						<legend class="parameters__legend">Draw FOV</legend>
+						<input type="checkbox" name="fov" id="fov">
 					</fieldset>
 					<!-- <fieldset class="parameters__field">
 						<legend class="parameters__legend"></legend>

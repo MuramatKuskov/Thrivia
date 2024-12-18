@@ -82,6 +82,10 @@ body {
 	color: var(--main-text-color);
 }
 
+select:hover, option:hover, label:hover, input:hover {
+	cursor: pointer;
+}
+
 select {
 	border: 1px solid gray;
 	color: var(--main-text-color);
@@ -203,6 +207,10 @@ button {
 	flex-wrap: wrap;
 }
 
+.parameters__field .input__element {
+	width: 100%;
+}
+
 /* inspector elements */
 #inspect-trigger {
 	position: absolute;
@@ -293,4 +301,13 @@ canvas {
 	top: 0;
 	left: 0;
 	background: transparent;
+}
+
+@media (min-width: 768px) {
+	.parameters__field .input__element {
+		width: auto;
+		/* display: flex; */
+		/* flex-direction: column; */
+		/* align-items: center; */
+	}
 }

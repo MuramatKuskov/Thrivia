@@ -18,10 +18,13 @@ const BIOM_CONSTRUCTORS = {
 	sands: Sands
 }
 
-window.PARAMETERS = {
-	geometry: document.querySelector('input[name="geometry"]:checked').value,
-	population: parseInt(window["population-size"].value),
-	organic: parseInt(window["organic-count"].value),
+const PARAMETERS = {
+	saveLastConfig: true,
+	useLastConfig: true,
+	geometry: "closed",
+	biom: "aqua",
+	population: 70,
+	organic: 150,
 	organicEnergyValue: 50,
 	dayNightPeriod: 1000, 	// frames
 	seasonPeriod: 30000,  	// frames
@@ -34,16 +37,26 @@ window.PARAMETERS = {
 	// relatives and non-relatives
 	populationRelativityGap: 5,
 	respawnOrganic: true,
-	drawFOV: window.fov.value === "true" ? true : false,
+	drawFOV: true,
 	drawRangeOfSight: false,
 	drawRangeOfInteract: false,
 	inspectionMode: false,
-	paintScheme: document.querySelector('input[name="paint"]:checked').value,
+	paintScheme: "default",
+}
+
+const useLastConfig = JSON.parse(localStorage.getItem("use-last-config"));
+
+if (useLastConfig) {
+	window.PARAMETERS = JSON.parse(localStorage.getItem("last-config"));
+} else {
+	window.PARAMETERS = PARAMETERS;
+	localStorage.setItem("use-last-config", JSON.stringify(true));
+	localStorage.setItem("last-config", JSON.stringify(PARAMETERS));
 }
 
 function main() {
 	initRenderers(RENDERERS);
-	window.simulation = /* BIOM_CONSTRUCTORS[`${localStorage.biom}`] || */ new BIOM_CONSTRUCTORS.aqua();
+	window.simulation = new BIOM_CONSTRUCTORS[`${window.PARAMETERS.biom}`]();
 	window.simulation.init();
 	initUserInterface(BIOM_CONSTRUCTORS);
 }

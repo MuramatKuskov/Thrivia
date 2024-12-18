@@ -17,17 +17,76 @@ let inspectorTarget = null;
 let inspectedLayer = window["layer-selector"].value;
 
 export function initUserInterface(BIOM_CONSTRUCTORS) {
+	initParameters();
 	listenParameters(BIOM_CONSTRUCTORS);
 	listenStreamControls(BIOM_CONSTRUCTORS);
 	initInspector();
+}
+
+function initParameters() {
+	window["save-last-config"].checked = PARAMETERS.saveLastConfig;
+	window["use-last-config"].checked = PARAMETERS.useLastConfig;
+
+	Array.from(document.querySelectorAll("input[name='geometry']")).forEach(
+		input => {
+			if (input.value === PARAMETERS.geometry) {
+				return input.checked = true;
+			}
+		}
+	);
+
+	Array.from(window.biom.children).forEach(node => {
+		if (node.value === PARAMETERS.biom) node.selected = true;
+	});
+
+	window["population-size"].value = PARAMETERS.population;
+	window["organic-count"].value = PARAMETERS.organic;
+
+	Array.from(document.querySelectorAll("input[name='paint']")).forEach(
+		input => {
+			if (input.value === PARAMETERS.paintScheme) {
+				return input.checked = true;
+			}
+		}
+	);
+
+	window.fov.checked = PARAMETERS.drawFOV;
 }
 
 function listenParameters(BIOM_CONSTRUCTORS) {
 	const geometryOptions = document.querySelectorAll('input[name="geometry"]');
 	const paintOptions = document.querySelectorAll('input[name="paint"]');
 
+	window["save-last-config"].addEventListener("change", event => {
+		PARAMETERS.saveLastConfig = event.target.checked;
+		localStorage.setItem("last-config", JSON.stringify(PARAMETERS));
+	});
+
+	window["use-last-config"].addEventListener("change", event => {
+		PARAMETERS.useLastConfig = event.target.checked;
+		console.log(event.target.checked);
+
+		localStorage.setItem("use-last-config", JSON.stringify(event.target.checked));
+
+		if (PARAMETERS.saveLastConfig) {
+			localStorage.setItem("last-config", JSON.stringify(PARAMETERS));
+		}
+	});
+
+	geometryOptions.forEach(option => {
+		option.addEventListener("change", (event) => {
+			PARAMETERS.geometry = event.target.value;
+			if (PARAMETERS.saveLastConfig) {
+				localStorage.setItem("last-config", JSON.stringify(PARAMETERS));
+			}
+		});
+	});
+
 	window["population-size"].addEventListener('change', (event) => {
 		PARAMETERS.population = parseInt(event.target.value);
+		if (PARAMETERS.saveLastConfig) {
+			localStorage.setItem("last-config", JSON.stringify(PARAMETERS));
+		}
 	});
 	window["organic-count"].addEventListener('change', (event) => {
 		const newValue = parseInt(event.target.value);
@@ -55,24 +114,25 @@ function listenParameters(BIOM_CONSTRUCTORS) {
 		}
 
 		PARAMETERS.organic = newValue;
+		if (PARAMETERS.saveLastConfig) {
+			localStorage.setItem("last-config", JSON.stringify(PARAMETERS));
+		}
 	});
 
 	window.fov.addEventListener("change", event => {
-		let state = event.target.value === "true" ? false : true;
-		event.target.value = state;
-		PARAMETERS.drawFOV = state;
+		PARAMETERS.drawFOV = event.target.checked;
 		window.simulation.drawBeings();
+		if (PARAMETERS.saveLastConfig) {
+			localStorage.setItem("last-config", JSON.stringify(PARAMETERS));
+		}
 	});
 
-	window["geo-confirm"].addEventListener("click", () => {
+	window["biom-confirm"].addEventListener("click", () => {
 		if (window.simulation instanceof BIOM_CONSTRUCTORS[window.biom.value]) return;
 		stopSimulation(BIOM_CONSTRUCTORS);
-	});
-
-	geometryOptions.forEach(option => {
-		option.addEventListener("change", (event) => {
-			PARAMETERS.geometry = event.target.value;
-		});
+		if (PARAMETERS.saveLastConfig) {
+			localStorage.setItem("last-config", JSON.stringify(PARAMETERS));
+		}
 	});
 
 	paintOptions.forEach(scheme => {
@@ -90,6 +150,9 @@ function listenParameters(BIOM_CONSTRUCTORS) {
 					break;
 			}
 			window.simulation.drawBeings();
+			if (PARAMETERS.saveLastConfig) {
+				localStorage.setItem("last-config", JSON.stringify(PARAMETERS));
+			}
 		});
 	});
 }

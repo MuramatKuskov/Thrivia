@@ -31,11 +31,10 @@ Work in progress...
 В розробці...
 
 ## TODO:
-- UI options: **biom selector**, **bot memory variants**
-- handle window resize/device orientation
+- UI options: **bot memory variants**
+- handle window resize & device orientation
 - continuously stream state into observer window
-
-- save last parameters config into local store
+- genes of altruism (allow bots to share energy)
 
 
 
