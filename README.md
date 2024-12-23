@@ -26,7 +26,7 @@ The main goal of current project is to implement biodiversity by genotype in add
 The secondary goal is to diversify bot's behaviour by adding more mechanics.
 
 ### Overwiev
-The simulation represent a virtual world populated by creatures that can interact with each other and the environment.
+The simulation represent a virtual world populated by creatures that can interact with each other and the environment.  
 Bot's behaviour doesn't scripted. Instead, it's conditioned by genome of certain creature. Genome is a sequence of numbers,
 each number points to specific instruction (move/eat/mutate/etc). This sequence is generated randomly for the first generation
 and becomes subject to evolution during the simulation: children inherits their genome (sequence) from parents and mutate (by changing numbers at random positions).
@@ -45,19 +45,19 @@ and becomes subject to evolution during the simulation: children inherits their 
 	- **Cautious**: prefer non-relative beings when execute methods involving interactions
 	- **Reactive**: prefer beings that are in range of sight
 	- **Persistent**: prefer targets that are most consisted for current action (e.g. non-rels for hunt, relatives for altruistic behaviour)
-- Genome size
+- Genome size  
 	Doesn't applies to previously generated world (after input press Stop button to generate new world)
-- Continuous movement
+- Continuous movement  
 	When enabled, movement instruction changes pointer to next instruction with low probability,
 	effectively allowing to continue move forward once started,
 	untill something comes into field of view
 
 #### Conventional symbols
-Yellow circle — organic (food)
+Yellow circle — organic (food)  
 Orange circle — remains (food)
 
 #### Inspector
-Shows actual information about selected target.
+Shows actual information about selected target.  
 Currently accessible via DevTools console.
 
 ## UA
@@ -68,11 +68,11 @@ Currently accessible via DevTools console.
 Другорядною метою є урізноманітнення видів поведінки істот шляхом розробки нових механік.
 
 ### Огляд
-Симуляція представляє світ, населений створіннями, які можуть взаємодіяти одне з одним та з елементами оточення.
+Симуляція представляє світ, населений створіннями, які можуть взаємодіяти одне з одним та з елементами оточення.  
 Поведінка створінь не підчиняється певному сценарію. Замість цього, вона залежить від геному певної особи. Геном — це
 послідовність чисел, кожне вказує на конкретну інструкцію (переміститись/їсти/мутувати/тощо). Ця послідовність генерується випадковим чином
 для першого покоління створінь, після чого стає суб'єктом еволюційного процесу: за певних умов в геномі може відбутися мутація (заміна чисел на випадкових позиціях),
-а наступні покоління істот наслідують геном від батьків.
+а наступні покоління істот наслідують геном від батьків.  
 [Перейти до симуляції](https://muramatkuskov.github.io/Thrivia/)
 
 ### Посібник користувача
@@ -87,19 +87,19 @@ Currently accessible via DevTools console.
 	- **Cautious**: при виконанні інструкцій що передбачають взаємодію з іншими істотами звертати більше уваги на наявність чужаків
 	- **Reactive**: надавати перевагу особам, які знаходяться в межах дальності взаємодії
 	- **Persistent**: звертати увагу на осіб, які найбільше підходять для поточної дії (чужаки для полювання, родичі для альтруїстичної поведінки)
-	- Genome size
+	- Genome size  
 	Зміни параметра не зачіпають раніше створений світ (після вводу нового значення необхіжно натиснути кнопку Stop для генерації нового світу)
-- Безперервний рух:
+- Безперервний рух  
 	Коли увімкнено, інструкція переміщення змінює вказівник на наступну інструкцію
 	з меншою вірогідністю, дозволяючи продовжувати прямолінійний рух після його початку,
 	поки щось не попаде в поле зору.
 
 #### Умовні позначки
-Жовтий круг — органіка (їжа)
+Жовтий круг — органіка (їжа)  
 Помаранчевий круг — останки (їжа)
 
 #### Інспектор
-Показує актуальну інформацію про вибрану ціль.
+Показує актуальну інформацію про вибрану ціль.  
 Наразі інформація доступна у консолі вікна інструментів розробника.
 
 ## TODO:
