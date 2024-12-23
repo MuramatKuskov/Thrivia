@@ -24,24 +24,32 @@ const PARAMETERS = {
 	geometry: "closed",
 	biom: "aqua",
 	population: 70,
+	memSize: 32,
+	// number of genome mutations that divides
+	// relatives and non-relatives
+	// 1 mutation = 2 changes
+	populationRelativityGap: 12,
 	organic: 150,
-	organicEnergyValue: 50,
+	organicEnergyValue: 90,
 	dayNightPeriod: 1000, 	// frames
 	seasonPeriod: 30000,  	// frames
 	remainsLifespan: 3500,	// frames
 	beingSizeMin: 5,
 	beingSizeMax: 15,
-	// change size of beings with high energy
-	allowGrowth: false,
-	// number of genome mutations that divides
-	// relatives and non-relatives
-	populationRelativityGap: 5,
+	// scale beings with high energy
+	allowGrowth: true,
 	respawnOrganic: true,
-	drawFOV: true,
+	drawFOV: false,
 	drawRangeOfSight: false,
 	drawRangeOfInteract: false,
 	inspectionMode: false,
 	paintScheme: "default",
+	targetSelectionStrategy: "cautious",
+	continuousMovement: false,
+}
+
+window.resetDefaultParameters = function () {
+	window.PARAMETERS = PARAMETERS;
 }
 
 const useLastConfig = JSON.parse(localStorage.getItem("use-last-config"));
@@ -49,7 +57,7 @@ const useLastConfig = JSON.parse(localStorage.getItem("use-last-config"));
 if (useLastConfig) {
 	window.PARAMETERS = JSON.parse(localStorage.getItem("last-config"));
 } else {
-	window.PARAMETERS = PARAMETERS;
+	resetDefaultParameters();
 	localStorage.setItem("use-last-config", JSON.stringify(true));
 	localStorage.setItem("last-config", JSON.stringify(PARAMETERS));
 }

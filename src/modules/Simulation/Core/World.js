@@ -11,17 +11,24 @@ export class World {
 	}
 
 	init() {
-		// trees
-		// for (let i = 0; i < this.forestCover; i++) {
-		// 	const [x, y] = this.getPointOutsideArea(this.newTreeSize, this.river);
-		// 	this.staticMisc.push({ type: "tree", x: x, y: y, size: this.newTreeSize });
-		// }
-
 		// beings
 		for (let i = 0; i < PARAMETERS.population; i++) {
 			let [x, y] = this.getPointOutsideArea(PARAMETERS.beingSizeMin, this.population);
 
-			const being = new Being(i, x, y);
+			let targetSelectionStrategy = window.PARAMETERS.targetSelectionStrategy;
+
+			if (window.PARAMETERS.targetSelectionStrategy === "mixed") {
+				let rand = Math.random();
+				if (rand <= 0.33) {
+					targetSelectionStrategy = "cautious";
+				} else if (rand <= 0.66) {
+					targetSelectionStrategy = "reactive";
+				} else {
+					targetSelectionStrategy = "persistent";
+				}
+			}
+
+			const being = new Being(i, x, y, targetSelectionStrategy);
 			being.initMemory(true);
 
 			if (PARAMETERS.paintScheme === "smell") {
@@ -30,11 +37,6 @@ export class World {
 				being.paintEnergy();
 			}
 
-			// big boy
-			// if (i < 1) {
-			// 	being.size = 25;
-			// 	being.rangeOfSight = 80;
-			// }
 			this.population[i] = being;
 		}
 
@@ -133,6 +135,12 @@ export class World {
 		return [x, y];
 	}
 
+	getDistance(x1, y1, x2, y2) {
+		const dx = x2 - x1;
+		const dy = y2 - y1;
+		return Math.sqrt(dx * dx + dy * dy);
+	}
+
 	// example
 	/* drawRiver() {
 		window.ctx.fillStyle = '#0000FF';
@@ -177,9 +185,9 @@ export class World {
 	}
 
 	drawBeing(being) {
-		if (PARAMETERS.paintScheme === "smell") {
+		if (window.PARAMETERS.paintScheme === "smell") {
 			being.paintSmell();
-		} else if (PARAMETERS.paintScheme === "energy") {
+		} else if (window.PARAMETERS.paintScheme === "energy") {
 			being.paintEnergy();
 		}
 
@@ -190,9 +198,9 @@ export class World {
 		this.drawCirlce("population", x, y, size, `rgb(${color})`);
 
 		// eyesight
-		if (PARAMETERS.drawFOV) {
+		if (window.PARAMETERS.drawFOV) {
 			const area = being.getAreaOfSight();
-			ctx.population.strokeStyle = "red";
+			ctx.population.strokeStyle = "blue";
 			ctx.population.beginPath();
 			ctx.population.moveTo(being.x, being.y);
 			ctx.population.lineTo(area.leftX, area.leftY);
@@ -201,7 +209,7 @@ export class World {
 			ctx.population.stroke();
 		}
 
-		if (PARAMETERS.drawRangeOfSight) {
+		if (window.PARAMETERS.drawRangeOfSight) {
 			ctx.population.strokeStyle = "green";
 			ctx.population.moveTo(being.x, being.y);
 			ctx.population.beginPath();
@@ -209,11 +217,11 @@ export class World {
 			ctx.population.stroke();
 		}
 
-		if (PARAMETERS.drawRangeOfInteract) {
-			ctx.population.strokeStyle = "green";
+		if (window.PARAMETERS.drawRangeOfInteract) {
+			ctx.population.strokeStyle = "red";
 			ctx.population.moveTo(being.x, being.y);
 			ctx.population.beginPath();
-			ctx.population.arc(being.x, being.y, size + being.rangeOfInteract, 0, Math.PI * 2);
+			ctx.population.arc(being.x, being.y, being.interactRange, 0, Math.PI * 2);
 			ctx.population.stroke();
 		}
 	}

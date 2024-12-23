@@ -24,33 +24,43 @@ export function initUserInterface(BIOM_CONSTRUCTORS) {
 }
 
 function initParameters() {
-	window["save-last-config"].checked = PARAMETERS.saveLastConfig;
-	window["use-last-config"].checked = PARAMETERS.useLastConfig;
+	window["save-last-config"].checked = window.PARAMETERS.saveLastConfig;
+	window["use-last-config"].checked = window.PARAMETERS.useLastConfig;
 
 	Array.from(document.querySelectorAll("input[name='geometry']")).forEach(
 		input => {
-			if (input.value === PARAMETERS.geometry) {
+			if (input.value === window.PARAMETERS.geometry) {
 				return input.checked = true;
 			}
 		}
 	);
 
 	Array.from(window.biom.children).forEach(node => {
-		if (node.value === PARAMETERS.biom) node.selected = true;
+		if (node.value === window.PARAMETERS.biom) node.selected = true;
+	});
+	Array.from(window["target-selection"].children).forEach(node => {
+		if (node.value === window.PARAMETERS.targetSelectionStrategy) node.selected = true;
 	});
 
-	window["population-size"].value = PARAMETERS.population;
-	window["organic-count"].value = PARAMETERS.organic;
+	window["population-size"].value = window.PARAMETERS.population;
+	window["organic-count"].value = window.PARAMETERS.organic;
 
 	Array.from(document.querySelectorAll("input[name='paint']")).forEach(
 		input => {
-			if (input.value === PARAMETERS.paintScheme) {
+			if (input.value === window.PARAMETERS.paintScheme) {
 				return input.checked = true;
 			}
 		}
 	);
 
-	window.fov.checked = PARAMETERS.drawFOV;
+	window.fov.checked = window.PARAMETERS.drawFOV;
+	window.ros.checked = window.PARAMETERS.drawRangeOfSight;
+	window.roi.checked = window.PARAMETERS.drawRangeOfInteract;
+
+	window.memSize.value = window.PARAMETERS.memSize;
+
+	window.growth.checked = window.PARAMETERS.allowGrowth;
+	window["continuous-movement"].checked = window.PARAMETERS.continuousMovement;
 }
 
 function listenParameters(BIOM_CONSTRUCTORS) {
@@ -58,41 +68,49 @@ function listenParameters(BIOM_CONSTRUCTORS) {
 	const paintOptions = document.querySelectorAll('input[name="paint"]');
 
 	window["save-last-config"].addEventListener("change", event => {
-		PARAMETERS.saveLastConfig = event.target.checked;
-		localStorage.setItem("last-config", JSON.stringify(PARAMETERS));
+		window.PARAMETERS.saveLastConfig = event.target.checked;
+		localStorage.setItem("last-config", JSON.stringify(window.PARAMETERS));
 	});
 
 	window["use-last-config"].addEventListener("change", event => {
-		PARAMETERS.useLastConfig = event.target.checked;
-		console.log(event.target.checked);
+		window.PARAMETERS.useLastConfig = event.target.checked;
 
 		localStorage.setItem("use-last-config", JSON.stringify(event.target.checked));
 
-		if (PARAMETERS.saveLastConfig) {
-			localStorage.setItem("last-config", JSON.stringify(PARAMETERS));
+		if (window.PARAMETERS.saveLastConfig) {
+			localStorage.setItem("last-config", JSON.stringify(window.PARAMETERS));
 		}
 	});
 
 	geometryOptions.forEach(option => {
 		option.addEventListener("change", (event) => {
-			PARAMETERS.geometry = event.target.value;
-			if (PARAMETERS.saveLastConfig) {
-				localStorage.setItem("last-config", JSON.stringify(PARAMETERS));
+			window.PARAMETERS.geometry = event.target.value;
+			if (window.PARAMETERS.saveLastConfig) {
+				localStorage.setItem("last-config", JSON.stringify(window.PARAMETERS));
 			}
 		});
 	});
 
+	window["biom-confirm"].addEventListener("click", () => {
+		if (window.simulation instanceof BIOM_CONSTRUCTORS[window.biom.value]) return;
+		window.PARAMETERS.biom = window.biom.value;
+		stopSimulation(BIOM_CONSTRUCTORS);
+		if (window.PARAMETERS.saveLastConfig) {
+			localStorage.setItem("last-config", JSON.stringify(window.PARAMETERS));
+		}
+	});
+
 	window["population-size"].addEventListener('change', (event) => {
-		PARAMETERS.population = parseInt(event.target.value);
-		if (PARAMETERS.saveLastConfig) {
-			localStorage.setItem("last-config", JSON.stringify(PARAMETERS));
+		window.PARAMETERS.population = parseInt(event.target.value);
+		if (window.PARAMETERS.saveLastConfig) {
+			localStorage.setItem("last-config", JSON.stringify(window.PARAMETERS));
 		}
 	});
 	window["organic-count"].addEventListener('change', (event) => {
 		const newValue = parseInt(event.target.value);
 
-		if (newValue > PARAMETERS.organic) {
-			let diff = newValue - PARAMETERS.organic;
+		if (newValue > window.PARAMETERS.organic) {
+			let diff = newValue - window.PARAMETERS.organic;
 			for (let i = 0; i < diff; i++) {
 				let [x, y] = window.simulation.getPointOutsideArea(4, window.simulation.environment);
 				window.simulation.environment.push(new Organic(`${Date.now()}-${Math.random().toString(36).substring(2, 15)}`, x, y));
@@ -113,32 +131,16 @@ function listenParameters(BIOM_CONSTRUCTORS) {
 			}
 		}
 
-		PARAMETERS.organic = newValue;
-		if (PARAMETERS.saveLastConfig) {
-			localStorage.setItem("last-config", JSON.stringify(PARAMETERS));
-		}
-	});
-
-	window.fov.addEventListener("change", event => {
-		PARAMETERS.drawFOV = event.target.checked;
-		window.simulation.drawBeings();
-		if (PARAMETERS.saveLastConfig) {
-			localStorage.setItem("last-config", JSON.stringify(PARAMETERS));
-		}
-	});
-
-	window["biom-confirm"].addEventListener("click", () => {
-		if (window.simulation instanceof BIOM_CONSTRUCTORS[window.biom.value]) return;
-		stopSimulation(BIOM_CONSTRUCTORS);
-		if (PARAMETERS.saveLastConfig) {
-			localStorage.setItem("last-config", JSON.stringify(PARAMETERS));
+		window.PARAMETERS.organic = newValue;
+		if (window.PARAMETERS.saveLastConfig) {
+			localStorage.setItem("last-config", JSON.stringify(window.PARAMETERS));
 		}
 	});
 
 	paintOptions.forEach(scheme => {
 		scheme.addEventListener("change", (event) => {
-			PARAMETERS.paintScheme = event.target.id;
-			switch (PARAMETERS.paintScheme) {
+			window.PARAMETERS.paintScheme = event.target.id;
+			switch (window.PARAMETERS.paintScheme) {
 				case "default":
 					window.simulation.population.forEach(being => being.color = `${being.c_red}, ${being.c_green}, ${being.c_blue}`);
 					break;
@@ -150,11 +152,52 @@ function listenParameters(BIOM_CONSTRUCTORS) {
 					break;
 			}
 			window.simulation.drawBeings();
-			if (PARAMETERS.saveLastConfig) {
-				localStorage.setItem("last-config", JSON.stringify(PARAMETERS));
+			if (window.PARAMETERS.saveLastConfig) {
+				localStorage.setItem("last-config", JSON.stringify(window.PARAMETERS));
 			}
 		});
 	});
+
+	window.fov.addEventListener("change", event => handleRenderOptions(event, "drawFOV"));
+	window.ros.addEventListener("change", event => handleRenderOptions(event, "drawRangeOfSight"));
+	window.roi.addEventListener("change", event => handleRenderOptions(event, "drawRangeOfInteract"));
+
+	window["target-selection"].addEventListener("change", event => {
+		window.PARAMETERS.targetSelectionStrategy = event.target.value;
+		if (window.PARAMETERS.saveLastConfig) {
+			localStorage.setItem("last-config", JSON.stringify(window.PARAMETERS));
+		}
+	});
+
+	window.memSize.addEventListener('change', (event) => {
+		window.PARAMETERS.memSize = parseInt(event.target.value);
+		if (window.PARAMETERS.saveLastConfig) {
+			localStorage.setItem("last-config", JSON.stringify(window.PARAMETERS));
+		}
+	});
+
+	window.growth.addEventListener("change", event => {
+		window.PARAMETERS.allowGrowth = event.target.checked;
+		window.simulation.population.forEach(bot => bot.updateSize(event.target.checked));
+		window.simulation.drawBeings();
+		if (window.PARAMETERS.saveLastConfig) {
+			localStorage.setItem("last-config", JSON.stringify(window.PARAMETERS));
+		}
+	});
+	window["continuous-movement"].addEventListener("change", event => {
+		window.PARAMETERS.continuousMovement = event.target.checked;
+		if (window.PARAMETERS.saveLastConfig) {
+			localStorage.setItem("last-config", JSON.stringify(window.PARAMETERS));
+		}
+	});
+}
+
+function handleRenderOptions(event, parameterToHandle) {
+	window.PARAMETERS[`${parameterToHandle}`] = event.target.checked;
+	window.simulation.drawBeings();
+	if (window.PARAMETERS.saveLastConfig) {
+		localStorage.setItem("last-config", JSON.stringify(window.PARAMETERS));
+	}
 }
 
 function listenStreamControls(BIOM_CONSTRUCTORS) {
@@ -214,6 +257,7 @@ function stopSimulation(BIOM_CONSTRUCTORS) {
 		window.cancelAnimationFrame(inspectorAnimationID);
 		inspectorAnimationID = null;
 	}
+
 	window.simulation.isLive = false;
 	window.simulation = new BIOM_CONSTRUCTORS[window.biom.value]();
 	window.simulation.init();
@@ -278,20 +322,27 @@ function listenLayerInteract(event) {
 				inspectorTarget.statusColor = "orange";
 				window.simulation.drawBeings();
 			}
-			// select new
-			inspectorTarget = object;
-			if (inspectorTarget instanceof Being) {
-				inspectorTarget.statusColor = "blue";
-				window.simulation.drawBeings();
+
+			if (inspectorTarget?.id !== object.id) {
+				// select new
+				inspectorTarget = object;
+				if (inspectorTarget instanceof Being) {
+					inspectorTarget.statusColor = "blue";
+					window.simulation.drawBeings();
+				}
+			} else {
+				inspectorTarget = null;
 			}
+
 			document.dispatchEvent(targetSelectEvent);
+			break;
 		}
 	}
 }
 
 // recursive animation call
 function animateInspector() {
-	if (inspectedLayer !== "world" && !inspectorTarget || !window.simulation.isLive) {
+	if ((inspectedLayer !== "world" && !inspectorTarget) || !window.simulation.isLive) {
 		cancelAnimationFrame(inspectorAnimationID);
 		document.addEventListener("targetSelect", resumeInspectorAnimation);
 		return;
@@ -316,8 +367,8 @@ function updateInspector() {
 	// const section = document.querySelector(`.inspector__section[data-layer="${inspectedLayer}"]`);
 
 	if (inspectedLayer !== "world" && !inspectorTarget) {
-		console.error("no tgt at layer: " + inspectedLayer);
-		cancelAnimationFrame(inspectorAnimationID);
+		console.warn("no tgt at layer: " + inspectedLayer);
+		return cancelAnimationFrame(inspectorAnimationID);
 	}
 
 	switch (inspectedLayer) {

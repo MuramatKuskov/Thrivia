@@ -19,7 +19,7 @@ export class Organic extends EnvironmentObject {
 export class Tree extends EnvironmentObject {
 	constructor(id, x, y, size) {
 		super(id, x, y);
-		this.size = size;
+		this.size = 10;
 		this.color = "green";
 	}
 }

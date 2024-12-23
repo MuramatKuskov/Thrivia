@@ -87,10 +87,10 @@
 							<input type="radio" value="default" class="parameters__input" name="paint" id="default">
 							<label for="default">Default</label>
 						</div>
-						<div class="input__element">
+						<!-- <div class="input__element">
 							<input type="radio" value="smell" class="parameters__input" name="paint" id="smell">
 							<label for="smell">Smell</label>
-						</div>
+						</div> -->
 						<div class="input__element">
 							<input type="radio" value="energy" class="parameters__input" name="paint" id="energy">
 							<label for="energy">Energy</label>
@@ -100,15 +100,35 @@
 						<legend class="parameters__legend">Draw FOV</legend>
 						<input type="checkbox" name="fov" id="fov">
 					</fieldset>
-					<!-- <fieldset class="parameters__field">
-						<legend class="parameters__legend"></legend>
-					</fieldset> -->
-					<!-- <fieldset class="parameters__field">
-						<legend class="parameters__legend"></legend>
-					</fieldset> -->
-					<!-- <fieldset class="parameters__field">
-						<legend class="parameters__legend"></legend>
-					</fieldset> -->
+					<fieldset class="parameters__field">
+						<legend class="parameters__legend">Draw range of sight</legend>
+						<input type="checkbox" name="ros" id="ros">
+					</fieldset>
+					<fieldset class="parameters__field">
+						<legend class="parameters__legend">Draw range of interact</legend>
+						<input type="checkbox" name="roi" id="roi">
+					</fieldset>
+					<fieldset class="parameters__field">
+						<legend class="parameters__legend">Target selection strategy:</legend>
+						<select name="target-selection" id="target-selection" class="parameters__select">
+							<option value="cautious" class="parameters__option">Cautious</option>
+							<option value="reactive" class="parameters__option">Reactive</option>
+							<option value="persistent" class="parameters__option">Persistent</option>
+							<option value="mixed" class="parameters__option">Random mix</option>
+						</select>
+					</fieldset>
+					<fieldset class="parameters__field">
+						<legend class="parameters__legend">Genome size:</legend>
+						<input id="memSize" type="range" min="32" max="512" step="8" class="parameters__input" name="memSize">
+					</fieldset>
+					<fieldset class="parameters__field">
+						<legend class="parameters__legend">Allow growth</legend>
+						<input type="checkbox" name="growth" id="growth">
+					</fieldset>
+					<fieldset class="parameters__field">
+						<legend class="parameters__legend">Continuous movement</legend>
+						<input type="checkbox" name="continuous-movement" id="continuous-movement">
+					</fieldset>
 				</div>
 			</div>
 		</div>

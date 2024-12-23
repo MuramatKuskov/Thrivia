@@ -3,7 +3,7 @@ import { GenePool } from "./GenePool.js";
 const genes = Object.keys(GenePool);
 
 export class Being {
-	constructor(id, x, y) {
+	constructor(id, x, y, targetSelectionStrategy) {
 		this.id = id;
 		this.x = x;
 		this.y = y;
@@ -13,12 +13,13 @@ export class Being {
 		this.energy = 100;
 		this.nutritions = 10;
 		this.FOV = 60;				 // degrees
-		this.rangeOfSight = 35; // px
-		this.interactRangeMod = 0.3; // * rangeOfSight = px
+		this.rangeOfSight = 66; // px
+		this.interactRange = this.rangeOfSight * 0.55; // px
+		this.targetSelectionStrategy = targetSelectionStrategy;
 		this.speed = 2;
 		this.direction = Math.floor(Math.random() * 360);
 		// size of geno- & phenotype arrays
-		this.memSize = 32;
+		this.memSize = window.PARAMETERS.memSize;
 		// available (inherited) genes
 		this.genome = [];
 		// genome hash
@@ -46,7 +47,7 @@ export class Being {
 				let index = Math.floor(Math.random() * GenePool.size);
 				this.genome.push({ key: genes[index], index: index });
 			}
-			this.hashGenome();
+			// this.hashGenome();
 		}
 
 		while (this.phenotype.length < this.memSize) {
@@ -57,8 +58,8 @@ export class Being {
 
 	hashGenome() {
 		this.smell = 0;
-		// what if key length here??
-		this.genome.forEach(x => this.smell += x.index);
+		this.genome.forEach((gene, index) => this.smell += gene.index * index / this.memSize);
+		// console.log(this.smell);
 	}
 
 	// jump to next action depending on result of current
@@ -75,9 +76,13 @@ export class Being {
 	doSmth() {
 		let breakFlag;
 		let command;
-		for (let cyc = 0; cyc < 15; cyc++) {
+		for (let cyc = 0; cyc < 5; cyc++) {
 			breakFlag = 0;
 			command = this.genome[this.phenotype[this.expressionPointer].index].index;
+
+			// if (this.statusColor === "blue") {
+			// 	console.log(`CURR: ${this.phenotype[this.expressionPointer].key}`);
+			// }
 
 			// trash DNA could lead to pool overflow
 			// if (GenePool[`${genes[command]}`]) {
@@ -87,6 +92,10 @@ export class Being {
 			// }
 
 			breakFlag = GenePool[`${genes[command]}`](this);
+
+			// if (this.statusColor === "blue" && cyc === 15) {
+			// 	console.log(`NEXT: ${this.phenotype[this.expressionPointer].key}`);
+			// }
 
 			// switch (command) {
 			// 	case 0:
@@ -180,7 +189,12 @@ export class Being {
 			// 		this.incrementExpressionPointer(1);
 			// 		break;
 			// }
-			if (breakFlag === 1) break;
+			if (breakFlag === 1) {
+				// if (this.statusColor === "blue") {
+				// 	console.log(`FNEXT: ${this.phenotype[this.expressionPointer].key}`);
+				// }
+				break;
+			}
 		}
 
 		// выход из функции
@@ -195,8 +209,9 @@ export class Being {
 
 			this.energy = this.age < 1500 ? this.energy - 0.1 : this.energy - 0.5;
 
-			if (PARAMETERS.allowGrowth) this.size = Math.max(PARAMETERS.beingSizeMin, Math.min(PARAMETERS.beingSizeMin * (this.energy / 100), PARAMETERS.beingSizeMax));
+			if (window.PARAMETERS.allowGrowth) this.updateSize(true);
 
+			if (this.energy < 0) this.health -= 0.5
 			// рандомный шанс пригрустить для пожилых
 			if (this.age > 9000) {
 				if (Math.random() < 0.15) {
@@ -216,6 +231,11 @@ export class Being {
 				return;
 			}
 		}
+	}
+
+	updateSize(allowGrowth) {
+		if (!allowGrowth) return this.size = window.PARAMETERS.beingSizeMin;
+		this.size = Math.max(PARAMETERS.beingSizeMin, Math.min(PARAMETERS.beingSizeMin * (this.energy / 200), PARAMETERS.beingSizeMax));
 	}
 
 	// written with help of AI
@@ -238,7 +258,7 @@ export class Being {
 	}
 
 	// written with help of AI
-	isPointInSight(x, y, mod = 1) {
+	isPointInSight(x, y) {
 		// Calculate the direction vector of the bot
 		const directionX = Math.cos(this.direction * Math.PI / 180);
 		const directionY = Math.sin(this.direction * Math.PI / 180);
@@ -257,15 +277,15 @@ export class Being {
 		if (
 			!(
 				Math.acos(dotProduct / objectDistance) * 180 / Math.PI <= this.FOV / 2 &&
-				objectDistance <= this.rangeOfSight * mod
+				objectDistance <= this.rangeOfSight
 			)
 		) return false;
 
 		return true;
 	}
 
-	isRelative(being, strongMatch = false) {
-		if (Math.abs(this.smell - being.smell) > GenePool.size) return false;
+	isRelative(being, strongMatch = true) {
+		// if (Math.abs(this.smell - being.smell) > GenePool.size) return false;
 
 		// check before mating?
 		if (strongMatch) {
@@ -277,6 +297,129 @@ export class Being {
 		}
 
 		return true;
+	}
+
+	selectBotInSight(preference, strategy) {
+		let target = null;
+
+		window.simulation.population.forEach((bot, index) => {
+			if (!this.isPointInSight(bot.x, bot.y)) return;
+			// if (bot.age < 30) return;
+
+			bot.distance = window.simulation.getDistance(this.x, this.y, bot.x, bot.y);
+			bot.isRel = this.isRelative(bot);
+
+			// Близко соотв -> далеко соотв -> близко несоотв -> далеко несоотв
+			// Блзк с -> блзк нс -> длк с -> длк нс
+
+			if (
+				// remember first seen target
+				!target ||
+				(
+					// switch from anybody far to anybody closer
+					strategy === "reactive" && target.distance > this.interactRange && bot.distance <= this.interactRange
+				) ||
+				(
+					preference === "foreign" &&
+					(
+						strategy !== "reactive" &&
+						(
+							// switch from any relative to any non-relative
+							(target.isRel && !bot.isRel) ||
+							// switch from far to close non-rel
+							(target.distance > this.interactRange && !bot.isRel && bot.distance <= this.interactRange)
+						)
+					) ||
+					(
+						strategy === "reactive" &&
+						// switch from rel to close non-rel
+						target.isRel && !bot.isRel && bot.distance <= this.interactRange
+					)
+				) ||
+				(
+					preference === "relative" &&
+					(
+						strategy === "cautious" &&
+						// switch only to close rel if foreign in sight
+						!target.isRel && bot.isRel && bot.distance <= this.interactRange
+					) ||
+					(
+						strategy === "reactive" &&
+						// switch from non-rel to close rel
+						!target.isRel && bot.isRel && bot.distance <= this.interactRange
+					) ||
+					(
+						strategy === "persistent" &&
+						// switch from any non-rel to any rel
+						(!target.isRel && bot.isRel) ||
+						// switch from far to close rel
+						(target.distance > this.interactRange && bot.isRel && bot.distance <= this.interactRange)
+					)
+				)
+				// (
+				// 	// select relatives only when foreigns are far
+				// 	strategy === "cautious" && (
+				// 		(
+				// 			preference === "foreign" &&
+				// 			(
+				// 				// switch from any relative to any non-relative
+				// 				(target.isRel && !bot.isRel) ||
+				// 				// switch from far to close non-rel
+				// 				(target.distance > this.interactRange && !bot.isRel && bot.distance <= this.interactRange)
+				// 			)
+				// 		) ||
+				// 		(
+				// 			preference === "relative" &&
+				// 			// switch only to close rel if foreign in sight
+				// 			!target.isRel && bot.isRel && bot.distance <= this.interactRange
+				// 		)
+				// 	)
+				// ) ||
+				// (
+				// 	// select in range if possible
+				// 	strategy === "reactive" && (
+				// 		// switch from anybody far to anybody closer
+				// 		(target.distance > this.interactRange && bot.distance <= this.interactRange) ||
+				// 		(
+				// 			preference === "foreign" &&
+				// 			// switch from rel to close non-rel
+				// 			(target.isRel && !bot.isRel && bot.distance <= this.interactRange)
+				// 		) ||
+				// 		(
+				// 			preference === "relative" &&
+				// 			// switch from non-rel to close rel
+				// 			(!target.isRel && bot.isRel && bot.distance <= this.interactRange)
+				// 		)
+				// 	)
+				// ) ||
+				// (
+				// 	// select preferred if possible
+				// 	strategy === "persistent" && (
+				// 		(
+				// 			preference === "foreign" &&
+				// 			(
+				// 				// switch from any rel to any non-rel
+				// 				(target.isRel && !bot.isRel) ||
+				// 				// switch from far to close non-rel
+				// 				(target.distance > this.interactRange && !bot.isRel && bot.distance <= this.interactRange)
+				// 			)
+				// 		) ||
+				// 		(
+				// 			preference === "relative" &&
+				// 			// switch from any non-rel to any rel
+				// 			(!target.isRel && bot.isRel) ||
+				// 			// switch from far to close rel
+				// 			(target.distance > this.interactRange && bot.isRel && bot.distance <= this.interactRange)
+				// 		)
+				// 	)
+				// )
+			) {
+				target = bot;
+				target.index = index;
+			}
+		});
+
+		return target;
 	}
 
 	colorShift(incrementColor, value) {
@@ -311,95 +454,28 @@ export class Being {
 	}
 
 	// written with help of AI
-	paintSmell() {
-		// 50 and 165 magic numbers
-		// when size = 8 smells are lying in that range
-		const mod = GenePool.size * GenePool.size - GenePool.size;
+	// paintSmell() {
+	// 	// 50 and 165 magic numbers
+	// 	// when pool size = 8 smells are lying in that range
+	// 	const mod = GenePool.size * (GenePool.size - GenePool.size);
 
-		// const normalized = (value - 50) / (165 - 50);
-		const normalized = (this.smell - mod) / (GenePool.size * (GenePool.size * 2.5) - mod);
+	// 	// const mean = this.memSize * (GenePool.size / 2);
+	// 	// const deviation = this.smell - mean;
 
-		this.color = `${255 - 255 * normalized}, ${255 - 255 * normalized}, 255`;
-	}
+	// 	// const normalized = (value - 50) / (165 - 50);
+	// 	const normalized = (this.smell - mod) / ((this.memSize * GenePool.size) - mod) * 2;
+
+	// 	// this.color = `255, 255, ${normalized * 255}`;
+	// 	this.color = `${255 - 255 * normalized}, ${255 - 255 * normalized}, 255`;
+	// }
 
 	// written with help of AI
 	paintEnergy() {
 		if (this.energy < 0) return this.color = `95, 35, 55`;
 
-		// Normalize energy to a value between 0 and 1
 		const normalized = this.energy / 300;
 
 		// Return the RGB color as a string
 		this.color = `255, ${255 - 255 * normalized}, ${255 - 255 * normalized}`;
 	}
-
-	// mutate() {
-	// 	let genA = Math.floor(Math.random() * this.memSize);
-	// 	let genB = Math.floor(Math.random() * this.memSize);
-	// 	this.phenotype[genA] = genB;
-	// 	genA = Math.floor(Math.random() * this.memSize);
-	// 	genB = Math.floor(Math.random() * this.memSize);
-	// 	this.phenotype[genB] = genA;
-	// 	this.timeSinceMutation = 0;
-	// }
-
-	// // после мува осмотреться вокруг и вернуть число
-	// // в зависимости от увиденного
-	// move() {
-	// 	const deltaX = Math.cos(this.direction) * this.speed;
-	// 	const deltaY = Math.sin(this.direction) * this.speed;
-
-	// 	// проверка на водоем на пути
-	// 	// if (
-	// 	// 	this.x + deltaX > this.world.river.x - this.size / 3
-	// 	// 	&&
-	// 	// 	this.x + deltaX < this.world.river.width - this.size / 3
-	// 	// 	&&
-	// 	// 	this.y + deltaY > this.world.river.y - this.size / 3
-	// 	// 	&&
-	// 	// 	this.y + deltaY < this.world.river.height - this.size / 3
-	// 	// ) {
-	// 	// 	console.log(3);
-	// 	// }
-
-	// 	this.x += deltaX;
-	// 	this.y += deltaY;
-
-	// 	// world boundaries
-	// 	switch (window.simulation.geometry) {
-	// 		// closed (torus)
-	// 		case 0:
-	// 			if (this.x + this.size / 2 < 0) {
-	// 				this.x = window.innerWidth - this.size;
-	// 			} else if (this.x + this.size > window.innerWidth) {
-	// 				this.x = 0 + this.size / 2;
-	// 			}
-
-	// 			if (this.y + this.size < 0) {
-	// 				this.y = window.innerHeight - this.size;
-	// 			} else if (this.y + this.size > window.innerHeight) {
-	// 				this.y = 0;
-	// 			}
-	// 			break;
-
-	// 		// confined (bordered)
-	// 		case 1:
-	// 			if (this.x < this.size / 2) {
-	// 				this.x = this.size;
-	// 			} else if (this.x + this.size > window.innerWidth) {
-	// 				this.x = window.innerWidth - this.size;
-	// 			}
-
-	// 			if (this.y < this.size) {
-	// 				this.y = this.size;
-	// 			} else if (this.y + this.size > window.innerHeight) {
-	// 				this.y = window.innerHeight - this.size;
-	// 			}
-	// 			break;
-	// 	}
-	// }
-
-	// turn() {
-	// 	this.direction = Math.floor(Math.random() * 360);
-	// }
 }
