@@ -41,7 +41,7 @@ and becomes subject to evolution during the simulation: children inherits their 
 - Paint schemes
 	- **Default**: All beings are initially green and their color shifts to red when they eat other creatures (the shift is less if being ate remains of other creature). Childrens are inheriting their color from parents.
 	- **Energy**: Color of each creature represents it's energy state: from white (low energy) to bright-red (high energy). At the time there is also individuals with negative enery — they're painted in dark burgundy.
-- Target selection strategies
+- Target selection strategies (Doesn't applies to previously generated world — after input press Stop button to generate new world)
 	- **Cautious**: prefer non-relative beings when execute methods involving interactions
 	- **Reactive**: prefer beings that are in range of sight
 	- **Persistent**: prefer targets that are most consisted for current action (e.g. non-rels for hunt, relatives for altruistic behaviour)
@@ -53,8 +53,8 @@ and becomes subject to evolution during the simulation: children inherits their 
 	untill something comes into field of view
 
 #### Conventional symbols
-Yellow circle — organic (food)  
-Orange circle — remains (food)
+- Yellow circle — organic (food)  
+- Orange circle — remains (food)
 
 #### Inspector
 Shows actual information about selected target.  
@@ -83,20 +83,20 @@ Currently accessible via DevTools console.
 	- Кольорові схеми
 	- **Default**: Усі створіння спочатку мають зелений колір, який поступово змінюється на червоний при поїданні інших істот (ефект менший при поїданні останків). Потомки наслідують колір батьків.
 	- **Energy**: Колір істот відображає їх енергетичний стан: від білого (мало енергії) до світло-червоного (багато енергії). Трапляються індивіди з від'ємною енергією — вони пофарбовані у темно-бордовий колір.
-- Стратегії вибору цілі
+- Стратегії вибору цілі (Зміни параметра не зачіпають раніше створений світ — після вводу нового значення необхідно натиснути кнопку Stop для генерації нового світу)
 	- **Cautious**: при виконанні інструкцій що передбачають взаємодію з іншими істотами звертати більше уваги на наявність чужаків
 	- **Reactive**: надавати перевагу особам, які знаходяться в межах дальності взаємодії
 	- **Persistent**: звертати увагу на осіб, які найбільше підходять для поточної дії (чужаки для полювання, родичі для альтруїстичної поведінки)
-	- Genome size  
-	Зміни параметра не зачіпають раніше створений світ (після вводу нового значення необхіжно натиснути кнопку Stop для генерації нового світу)
+- Genome size  
+	Зміни параметра не зачіпають раніше створений світ (після вводу нового значення необхідно натиснути кнопку Stop для генерації нового світу)
 - Безперервний рух  
 	Коли увімкнено, інструкція переміщення змінює вказівник на наступну інструкцію
 	з меншою вірогідністю, дозволяючи продовжувати прямолінійний рух після його початку,
 	поки щось не попаде в поле зору.
 
 #### Умовні позначки
-Жовтий круг — органіка (їжа)  
-Помаранчевий круг — останки (їжа)
+- Жовтий круг — органіка (їжа)  
+- Помаранчевий круг — останки (їжа)
 
 #### Інспектор
 Показує актуальну інформацію про вибрану ціль.  
