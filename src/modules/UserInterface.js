@@ -257,6 +257,9 @@ function stopSimulation(BIOM_CONSTRUCTORS) {
 		window.cancelAnimationFrame(inspectorAnimationID);
 		inspectorAnimationID = null;
 	}
+	if (inspectorTarget) {
+		inspectorTarget = null;
+	}
 
 	window.simulation.isLive = false;
 	window.simulation = new BIOM_CONSTRUCTORS[window.biom.value]();
