@@ -29,7 +29,7 @@ The secondary goal is to diversify bot's behaviour by adding more mechanics.
 The simulation represent a virtual world populated by creatures that can interact with each other and the environment.  
 Bot's behaviour doesn't scripted. Instead, it's conditioned by genome of certain creature. Genome is a sequence of numbers,
 each number points to specific instruction (move/eat/mutate/etc). This sequence is generated randomly for the first generation
-and becomes subject to evolution during the simulation: children inherits their genome (sequence) from parents and mutate (by changing numbers at random positions).
+and becomes subject to evolution during the simulation: children inherits their genome (sequence) from parents and mutate (by changing numbers at random positions).  
 [Go to simulation](https://muramatkuskov.github.io/Thrivia/)
 
 
